@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>在家做 · 家常菜大转盘</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+    background: radial-gradient(1200px 700px at 50% -10%, #1d3a1d 0%, #17311a 45%, #0f2412 100%);
+    color: #fff7e6;
+    min-height: 100vh;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  /* ---------- 灯笼装饰 ---------- */
+  .lantern { position: fixed; top: -8px; z-index: 1; pointer-events: none; }
+  .lantern.l1 { left: 4vw; }
+  .lantern.l2 { right: 4vw; }
+  .lantern .string { width: 2px; height: 56px; background: #b98a4a; margin: 0 auto; }
+  .lantern .body {
+    width: 54px; height: 68px; border-radius: 46%;
+    background: radial-gradient(circle at 38% 32%, #ff7a5c, #d7263d 62%, #9c1425);
+    box-shadow: 0 0 26px 4px rgba(255, 90, 60, .35);
+    position: relative;
+    animation: sway 4.2s ease-in-out infinite;
+    transform-origin: top center;
+  }
+  .lantern.l2 .body { animation-delay: -2.1s; }
+  .lantern .body::before, .lantern .body::after {
+    content: ""; position: absolute; left: 50%; transform: translateX(-50%);
+    width: 26px; height: 8px; background: #f6c453; border-radius: 3px;
+  }
+  .lantern .body::before { top: -4px; }
+  .lantern .body::after { bottom: -4px; }
+  .lantern .tassel {
+    width: 3px; height: 22px; background: #f6c453; margin: 0 auto;
+    box-shadow: 6px 6px 0 -0.5px #f6c453, -6px 6px 0 -0.5px #f6c453;
+  }
+  @keyframes sway { 0%,100% { transform: rotate(3deg); } 50% { transform: rotate(-3deg); } }
+  @media (max-width: 640px) { .lantern { display: none; } }
+
+  /* ---------- 头部 ---------- */
+  header { text-align: center; padding: 30px 16px 6px; z-index: 2; }
+  h1 {
+    font-family: "Kaiti SC", "STKaiti", "KaiTi", "PingFang SC", serif;
+    font-size: clamp(30px, 6vw, 46px);
+    letter-spacing: 4px;
+    background: linear-gradient(180deg, #e8ffd8 15%, #a9e29a 55%, #6fbf4a 90%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 3px 6px rgba(0,0,0,.45));
+  }
+  .sub { margin-top: 10px; font-size: 14px; color: #cfe8c0; opacity: .85; letter-spacing: 1px; }
+  .sub b { color: #d8f5c8; font-weight: 600; }
+
+  /* ---------- 转盘 ---------- */
+  .wheel-zone { position: relative; margin-top: 18px; z-index: 2; }
+  .wheel-wrap {
+    position: relative;
+    width: min(88vw, 500px);
+    aspect-ratio: 1 / 1;
+    filter: drop-shadow(0 18px 40px rgba(0,0,0,.5));
+  }
+  #wheel { width: 100%; height: 100%; display: block; cursor: pointer; will-change: transform; }
+  .pointer {
+    position: absolute; top: -6px; left: 50%; transform: translateX(-50%);
+    width: 0; height: 0; z-index: 5;
+    border-left: 17px solid transparent; border-right: 17px solid transparent;
+    border-top: 34px solid #ffd54a;
+    filter: drop-shadow(0 3px 4px rgba(0,0,0,.45));
+  }
+  .pointer::after {
+    content: ""; position: absolute; top: -34px; left: -11px;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #ffe9a8, #f0a92d);
+    border: 2px solid #a8641a;
+  }
+  #goBtn {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 27%; aspect-ratio: 1 / 1; border-radius: 50%;
+    border: 5px solid #c8f0b0;
+    background: radial-gradient(circle at 36% 30%, #7ed162, #3f9e2f 60%, #2a7020);
+    color: #f4ffe8; cursor: pointer; z-index: 4;
+    font-size: clamp(20px, 5.4vw, 32px); font-weight: 700; letter-spacing: 2px;
+    font-family: "Kaiti SC", "STKaiti", "KaiTi", serif;
+    box-shadow: 0 8px 22px rgba(0,0,0,.5), inset 0 -6px 14px rgba(0,0,0,.28);
+    transition: transform .12s ease;
+  }
+  #goBtn:active { transform: translate(-50%, -50%) scale(.92); }
+  #goBtn:hover { filter: brightness(1.08); }
+
+  .tips { margin-top: 16px; font-size: 13px; color: #a8cc96; letter-spacing: 1px; z-index: 2; }
+
+  /* ---------- 声音 / 返回 ---------- */
+  .sound-btn {
+    position: fixed; top: 14px; right: 14px; z-index: 20;
+    width: 42px; height: 42px; border-radius: 50%;
+    border: 1.5px solid rgba(200, 240, 176, .45);
+    background: rgba(16, 40, 18, .55); backdrop-filter: blur(4px);
+    color: #ffd54a; font-size: 19px; cursor: pointer; line-height: 1;
+  }
+  .sound-btn:hover { background: rgba(24, 60, 26, .7); }
+  .back-btn {
+    position: fixed; top: 14px; left: 14px; z-index: 20;
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 42px; padding: 0 16px; border-radius: 999px;
+    border: 1.5px solid rgba(200, 240, 176, .45);
+    background: rgba(16, 40, 18, .55); backdrop-filter: blur(4px);
+    color: #c8f0b0; font-size: 14px; letter-spacing: 1px; cursor: pointer;
+    text-decoration: none; font-family: inherit;
+  }
+  .back-btn:hover { background: rgba(24, 60, 26, .7); }
+  .back-btn .arr { font-size: 16px; }
+
+  /* ---------- 历史 ---------- */
+  .history { width: min(92vw, 640px); margin: 26px auto 10px; z-index: 2; }
+  .history h3 {
+    font-size: 14px; color: #b8d8a4; letter-spacing: 2px; font-weight: 600;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .history h3::before, .history h3::after {
+    content: ""; flex: 1; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(184,216,164,.45), transparent);
+  }
+  .history .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 12px; min-height: 30px; }
+  .history .chip {
+    padding: 5px 13px; border-radius: 999px; font-size: 13px;
+    background: rgba(200, 240, 176, .1); border: 1px solid rgba(200, 240, 176, .28);
+    color: #dcf5c8; animation: pop .25s ease;
+  }
+  .history .chip:first-child { background: rgba(169, 226, 154, .22); border-color: rgba(169, 226, 154, .55); color: #e8ffd8; }
+  .history .empty { color: #7d9c6b; font-size: 13px; margin-top: 12px; text-align: center; }
+  @keyframes pop { from { transform: scale(.5); opacity: 0; } }
+
+  footer { margin: 26px 0 30px; font-size: 12px; color: #6f8f5e; letter-spacing: 1px; z-index: 2; text-align: center; line-height: 1.9; }
+
+  /* ---------- 结果弹窗 ---------- */
+  .modal-mask {
+    position: fixed; inset: 0; z-index: 50;
+    background: rgba(8, 20, 8, .66); backdrop-filter: blur(6px);
+    display: none; align-items: center; justify-content: center; padding: 18px;
+  }
+  .modal-mask.show { display: flex; animation: fadein .25s ease; }
+  @keyframes fadein { from { opacity: 0; } }
+  .modal {
+    width: min(94vw, 430px); max-height: 88vh; overflow-y: auto;
+    border-radius: 22px;
+    background: linear-gradient(180deg, #f6fbef, #eaf5de);
+    color: #2e4a20; text-align: center;
+    animation: zoomin .38s cubic-bezier(.2, 1.4, .4, 1);
+    box-shadow: 0 24px 70px rgba(0,0,0,.55);
+  }
+  .modal::-webkit-scrollbar { width: 6px; }
+  .modal::-webkit-scrollbar-thumb { background: rgba(110, 160, 90, .4); border-radius: 3px; }
+  @keyframes zoomin { from { transform: scale(.6); opacity: 0; } }
+  .modal .ribbon {
+    background: linear-gradient(180deg, #4f9e3d, #2f6e24);
+    color: #eafff0; padding: 13px 10px;
+    font-size: 17px; letter-spacing: 6px; font-weight: 700;
+    font-family: "Kaiti SC", "STKaiti", "KaiTi", serif;
+    position: sticky; top: 0; z-index: 2;
+  }
+  .modal .art { padding: 16px 12px 2px; }
+  .modal .art svg { width: min(64vw, 220px); height: auto; filter: drop-shadow(0 6px 10px rgba(40, 70, 20, .18)); }
+  .modal .dish {
+    font-size: 29px; font-weight: 800; color: #2f6e24; margin-top: 6px; letter-spacing: 2px;
+    font-family: "Kaiti SC", "STKaiti", "KaiTi", "PingFang SC", serif;
+  }
+  .modal .ingr, .modal .nutr { text-align: left; padding: 10px 20px 2px; }
+  .modal .label {
+    font-size: 12.5px; color: #5a7d46; letter-spacing: 3px; margin-bottom: 9px; font-weight: 700;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .modal .label::after { content: ""; flex: 1; height: 1px; background: rgba(90,125,70,.3); }
+  .modal .ingr-row { display: flex; flex-wrap: wrap; gap: 7px; }
+  .ingr-chip {
+    padding: 6px 12px; border-radius: 9px; font-size: 13px;
+    background: #fff; border: 1.5px solid #cfe3bd; color: #3c6e2c; font-weight: 600;
+  }
+  .modal .nutr p {
+    font-size: 13.5px; color: #4a5a3c; line-height: 1.85;
+    background: rgba(255,255,255,.6); border-radius: 12px;
+    padding: 10px 12px; text-align: justify;
+  }
+  .modal .acts { display: flex; gap: 12px; padding: 18px 22px 22px; position: sticky; bottom: 0; background: linear-gradient(0deg, #eaf5de 60%, rgba(234,245,222,0)); }
+  .modal .acts button {
+    flex: 1; padding: 13px 0; border-radius: 999px; font-size: 16px; font-weight: 700;
+    cursor: pointer; letter-spacing: 3px; transition: transform .12s ease, filter .12s ease;
+    border: none;
+  }
+  .modal .acts button:hover { transform: translateY(-2px); filter: brightness(1.05); }
+  .btn-again { background: #fff; color: #2f6e24; border: 2px solid #4f9e3d !important; }
+  .btn-ok { background: linear-gradient(180deg, #4f9e3d, #2f6e24); color: #eafff0; }
+
+  /* ---------- 彩带 ---------- */
+  #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 60; }
+</style>
+</head>
+<body>
+
+<div class="lantern l1"><div class="string"></div><div class="body"></div><div class="tassel"></div></div>
+<div class="lantern l2"><div class="string"></div><div class="body"></div><div class="tassel"></div></div>
+<button class="sound-btn" id="soundBtn" title="声音开关">🔔</button>
+<a class="back-btn" href="../index.html"><span class="arr">←</span> 重新选择</a>
+
+<header>
+  <h1>在家做 · 家常菜大转盘</h1>
+  <div class="sub"><b>在家做</b> · <b>42</b> 道家常菜 · 附食材清单与营养价值</div>
+</header>
+
+<div class="wheel-zone">
+  <div class="wheel-wrap">
+    <div class="pointer"></div>
+    <canvas id="wheel"></canvas>
+    <button id="goBtn">开做</button>
+  </div>
+</div>
+<div class="tips">点转盘、按中间「开做」或敲空格键即可开转</div>
+
+<div class="history">
+  <h3>最近做过</h3>
+  <div class="chips" id="histChips"></div>
+  <div class="empty" id="histEmpty">还没有记录，转一次决定今天做啥菜～</div>
+</div>
+
+<footer>纯前端页面 · 无需联网加载任何资源 · 每次结果完全随机</footer>
+
+<!-- 结果弹窗 -->
+<div class="modal-mask" id="modalMask">
+  <div class="modal">
+    <div class="ribbon">✦ 今 日 份 家 常 菜 ✦</div>
+    <div class="art" id="modalArt"></div>
+    <div class="dish" id="modalDish"></div>
+    <div class="ingr">
+      <div class="label">食 材 准 备</div>
+      <div class="ingr-row" id="ingrRow"></div>
+    </div>
+    <div class="nutr">
+      <div class="label">营 养 价 值</div>
+      <p id="nutrText"></p>
+    </div>
+    <div class="acts">
+      <button class="btn-again" id="btnAgain">再转一次</button>
+      <button class="btn-ok" id="btnOk">就做这道菜！</button>
+    </div>
+  </div>
+</div>
+
+<canvas id="confetti"></canvas>
+
+<script>
+"use strict";
+/* ==================== 食物插画（纯 SVG 手绘，无外部图片） ==================== */
+const SVG_NS = 'xmlns="http://www.w3.org/2000/svg"';
+const wrap = inner => `<svg ${SVG_NS} viewBox="0 0 220 160">${inner}</svg>`;
+const shadow = (cx=110, cy=146, rx=80) => `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="9" fill="rgba(20,40,10,.18)"/>`;
+const steam = (x=110) => `
+  <path d="M${x-30} 34 q7 -9 0 -18" stroke="rgba(150,200,130,.3)" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+  <path d="M${x} 28 q-7 -10 0 -20" stroke="rgba(150,200,130,.3)" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+  <path d="M${x+30} 34 q7 -9 0 -18" stroke="rgba(150,200,130,.3)" stroke-width="3.4" fill="none" stroke-linecap="round"/>`;
+
+/* ---------- 器皿 ---------- */
+function plateLight(tops, inner='#f4ecd6') {
+  return wrap(shadow(110,136,88) + `
+    <ellipse cx="110" cy="112" rx="88" ry="26" fill="#ddd0b0"/>
+    <ellipse cx="110" cy="105" rx="88" ry="26" fill="#fdf7ea"/>
+    <ellipse cx="110" cy="105" rx="72" ry="20" fill="${inner}"/>
+    ${tops}
+    <ellipse cx="110" cy="105" rx="72" ry="20" fill="none" stroke="rgba(170,130,70,.3)" stroke-width="2"/>`);
+}
+function plateDark(tops) {
+  return wrap(shadow(110,136,88) + steam() + `
+    <ellipse cx="110" cy="112" rx="88" ry="26" fill="#2f333a"/>
+    <ellipse cx="110" cy="105" rx="88" ry="26" fill="#4c525c"/>
+    <ellipse cx="110" cy="105" rx="72" ry="20" fill="#31343b"/>
+    ${tops}
+    <ellipse cx="110" cy="105" rx="72" ry="20" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="2"/>`);
+}
+function soupBowlV(o) {
+  const { bowl='#e8e2d5', bowl2='#f7f3ea', broth='#c8481f', noodle='', noodleW=3.2, tops='' } = o;
+  return wrap(shadow() + steam() + `
+    <path d="M30 78 Q30 140 110 140 Q190 140 190 78 Z" fill="${bowl}"/>
+    <path d="M46 92 Q52 126 110 128 Q168 126 174 92 Q140 104 110 104 Q80 104 46 92Z" fill="rgba(0,0,0,.08)"/>
+    <ellipse cx="110" cy="78" rx="80" ry="17" fill="${bowl2}"/>
+    <ellipse cx="110" cy="78" rx="69" ry="13" fill="${broth}"/>
+    ${noodle ? `<path d="M58 77 q9 -8 18 0 t18 0 t18 0 t18 0 t18 0" stroke="${noodle}" stroke-width="${noodleW}" fill="none" stroke-linecap="round"/>
+    <path d="M52 72 q9 -8 18 0 t18 0 t18 0 t18 0 t18 0" stroke="${noodle}" stroke-width="${noodleW}" fill="none" stroke-linecap="round" opacity=".85"/>
+    <path d="M62 83 q9 -8 18 0 t18 0 t18 0 t18 0" stroke="${noodle}" stroke-width="${noodleW}" fill="none" stroke-linecap="round" opacity=".7"/>` : ''}
+    ${tops}
+    <ellipse cx="110" cy="78" rx="69" ry="13" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="2"/>`);
+}
+function riceBowlV(o) {
+  const { bowl='#3f6e8a', bowl2='#4d80a0', riceTop='#fff6e8', tops='' } = o;
+  return wrap(shadow() + `
+    <path d="M30 84 Q30 140 110 140 Q190 140 190 84 Z" fill="${bowl}"/>
+    <path d="M46 96 Q54 128 110 130 Q166 128 174 96 Q140 108 110 108 Q80 108 46 96Z" fill="rgba(0,0,0,.1)"/>
+    <ellipse cx="110" cy="84" rx="80" ry="17" fill="${bowl2}"/>
+    <path d="M45 84 Q68 46 110 46 Q152 46 175 84 Q110 96 45 84Z" fill="${riceTop}"/>
+    <path d="M70 62 q12 -7 24 -1 M112 52 q12 -4 22 4 M88 74 q12 -5 24 -1 M126 72 q10 -3 18 4" stroke="#efe0c8" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    ${tops}
+    <ellipse cx="110" cy="84" rx="80" ry="17" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="2"/>`);
+}
+
+/* ---------- 食材零件 ---------- */
+const scallion = (x,y) => `<circle cx="${x}" cy="${y}" r="3.4" fill="#5da24a"/><circle cx="${x}" cy="${y}" r="1.4" fill="#8fd47a"/>`;
+const greensDrop = (x,y) => `<path d="M${x} ${y} q-7 -6 -3 -12 q6 2 3 12Z" fill="#4f9e3d"/><path d="M${x} ${y} q7 -6 3 -12 q-6 2 -3 12Z" fill="#61b84c"/>`;
+const chiliOil = (x,y) => `<ellipse cx="${x}" cy="${y}" rx="6" ry="3.6" fill="#e53935" opacity=".9"/><circle cx="${x+3}" cy="${y-2}" r="1.6" fill="#ff8a65"/>`;
+const meatLump = (x,y,c='#a05a2c',c2='#c07b45',r=8) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}"/><circle cx="${x-2}" cy="${y-2}" r="${r*0.45}" fill="${c2}"/>`;
+const pepperBit = (x,y,c='#3f9e3f') => `<rect x="${x-6}" y="${y-2.4}" width="12" height="4.8" rx="2.4" fill="${c}"/>`;
+const beefSlice = (x,y,r=0) => `<g transform="rotate(${r} ${x} ${y})"><rect x="${x-11}" y="${y-7}" width="22" height="14" rx="6" fill="#a5583a"/><rect x="${x-8}" y="${y-5}" width="16" height="5" rx="2.5" fill="#c47a52"/></g>`;
+const fishSlice = (x,y,r=0) => `<g transform="rotate(${r} ${x} ${y})"><rect x="${x-12}" y="${y-6}" width="24" height="12" rx="6" fill="#f4e3d0"/><path d="M${x-9} ${y-3} h18" stroke="#e8b98f" stroke-width="2.4" stroke-linecap="round"/></g>`;
+const shrimp = (x,y) => `<path d="M${x-10} ${y+4} q4 -14 18 -10 q10 3 6 12 q-2 5 -8 4 q4 -8 -4 -10 q-8 -2 -8 8Z" fill="#e8836b"/><path d="M${x-10} ${y+4} l-4 6 l7 -2Z" fill="#e8836b"/>`;
+const shrimpBig = (x,y,r=0,c='#e86a4a') => `<g transform="rotate(${r} ${x} ${y})">
+  <path d="M${x-22} ${y+2} q0 -18 20 -18 q16 0 16 14 q0 10 -10 12 q-14 3 -26 -8Z" fill="${c}"/>
+  <path d="M${x+10} ${y-6} l14 -10 -2 14Z" fill="${c}"/>
+  <path d="M${x-22} ${y+2} q8 6 16 6" stroke="rgba(255,255,255,.35)" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+  <circle cx="${x-12}" cy="${y-6}" r="2.4" fill="#3a2418"/></g>`;
+
+const tomatoP = (x,y,r=0) => `<g transform="rotate(${r} ${x} ${y})">
+  <path d="M${x-12} ${y} a12 11 0 0 1 24 0 q-12 9 -24 0Z" fill="#e8442e"/>
+  <path d="M${x-4} ${y-9} l4 -6 l4 6Z" fill="#4f9e3d"/></g>`;
+const eggP = (x,y,r=0) => `<g transform="rotate(${r} ${x} ${y})">
+  <path d="M${x-13} ${y-6} q13 -9 26 0 q4 12 -13 13 q-17 -1 -13 -13Z" fill="#fff8e8"/>
+  <path d="M${x-6} ${y-3} q6 -5 12 0 q2 7 -6 7 q-8 0 -6 -7Z" fill="#ffc445"/></g>`;
+const meatC = (x,y,s=11,c='#b0622c',c2='#cf8450',r=0) => `<g transform="rotate(${r} ${x} ${y})">
+  <rect x="${x-s}" y="${y-s}" width="${s*2}" height="${s*2}" rx="${s*0.55}" fill="${c}"/>
+  <rect x="${x-s*0.62}" y="${y-s*0.62}" width="${s*1.24}" height="${s*1.24}" rx="${s*0.35}" fill="${c2}"/></g>`;
+const leafBig = (x,y,r=0,c='#4f9e3d',c2='#6ec253') => `<g transform="rotate(${r} ${x} ${y})">
+  <path d="M${x} ${y} q-13 -9 -7 -20 q10 2 7 20Z" fill="${c}"/>
+  <path d="M${x} ${y} q13 -9 7 -20 q-10 2 -7 20Z" fill="${c2}"/>
+  <path d="M${x} ${y} l0 -13" stroke="#3c7d2e" stroke-width="1.6"/></g>`;
+const chiliR = (x,y,r=0) => `<g transform="rotate(${r} ${x} ${y})">
+  <rect x="${x-15}" y="${y-3}" width="30" height="6" rx="3" fill="#e0452e"/>
+  <path d="M${x-15} ${y} l-6 -4" stroke="#4f9e3d" stroke-width="2.6" stroke-linecap="round"/></g>`;
+const peanut = (x,y) => `<ellipse cx="${x}" cy="${y}" rx="5" ry="6.6" fill="#f2dc9f"/><path d="M${x} ${y-4} v8" stroke="#d9bf7a" stroke-width="1.4"/>`;
+const tofuC = (x,y,s=9,r=0) => `<g transform="rotate(${r} ${x} ${y})">
+  <rect x="${x-s}" y="${y-s}" width="${s*2}" height="${s*2}" rx="2.5" fill="#fdfaf2"/>
+  <rect x="${x-s*0.66}" y="${y-s*0.66}" width="${s*1.32}" height="${s*1.32}" rx="2" fill="#f0e9d8"/>
+  <path d="M${x-s*0.5} ${y-s*0.5} q${s} ${s*0.2} ${s} ${s*0.8}" stroke="#e2d8bf" stroke-width="1.6" fill="none"/></g>`;
+const carrotP = (x,y,r=0) => `<g transform="rotate(${r} ${x} ${y})">
+  <rect x="${x-11}" y="${y-3.4}" width="22" height="6.8" rx="3.4" fill="#ef7d2e"/>
+  <rect x="${x-7}" y="${y-2}" width="12" height="4" rx="2" fill="#f9a45c"/>
+  <path d="M${x+11} ${y} l5 -4 M${x+11} ${y} l5 2" stroke="#4f9e3d" stroke-width="2.2" stroke-linecap="round"/></g>`;
+const potatoC = (x,y,s=10,r=0) => `<g transform="rotate(${r} ${x} ${y})">
+  <rect x="${x-s}" y="${y-s*0.8}" width="${s*2}" height="${s*1.6}" rx="${s*0.5}" fill="#d9b06e"/>
+  <rect x="${x-s*0.6}" y="${y-s*0.48}" width="${s*1.2}" height="${s*0.96}" rx="${s*0.3}" fill="#e8c48a"/></g>`;
+const mushroomP = (x,y,s=1) => `
+  <path d="M${x-12*s} ${y} a12 ${10*s} 0 0 1 ${24*s} 0 Z" fill="#b5844e"/>
+  <circle cx="${x-5*s}" cy="${y-4*s}" r="1.8*s" fill="#93683a"/><circle cx="${x+4*s}" cy="${y-5*s}" r="1.6*s" fill="#93683a"/>
+  <rect x="${x-4*s}" y="${y}" width="${8*s}" height="${9*s}" rx="${3*s}" fill="#f2e6cc"/>`;
+const cabbageL = (x,y,r=0) => `<g transform="rotate(${r} ${x} ${y})">
+  <path d="M${x} ${y} q-17 -4 -19 -19 q17 0 19 19Z" fill="#7ab648"/>
+  <path d="M${x} ${y} q17 -4 19 -19 q-17 0 -19 19Z" fill="#8fc85a"/>
+  <path d="M${x} ${y} l0 -13" stroke="#5a9636" stroke-width="1.8"/>
+  <path d="M${x-8} ${y-8} l-6 -6 M${x+8} ${y-8} l6 -6" stroke="#5a9636" stroke-width="1.4"/></g>`;
+const ribP = (x,y,r=0,c='#a05a2c',c2='#c07b45') => `<g transform="rotate(${r} ${x} ${y})">
+  <rect x="${x-18}" y="${y-6}" width="26" height="12" rx="6" fill="${c}"/>
+  <rect x="${x-14}" y="${y-3.5}" width="16" height="7" rx="3.5" fill="${c2}"/>
+  <rect x="${x+7}" y="${y-2.6}" width="13" height="5.2" rx="2.6" fill="#f7ecd7"/>
+  <circle cx="${x+21}" cy="${y}" r="4" fill="#f7ecd7"/></g>`;
+const legP = (x,y,r=0,c='#d9932b') => `<g transform="rotate(${r} ${x} ${y})">
+  <circle cx="${x}" cy="${y}" r="17" fill="${c}"/>
+  <circle cx="${x-5}" cy="${y-5}" r="6" fill="#eab54a"/>
+  <rect x="${x+12}" y="${y-3.4}" width="18" height="6.8" rx="3.4" fill="#f7ecd7"/>
+  <circle cx="${x+32}" cy="${y}" r="5" fill="#fff8ea"/>
+  <circle cx="${x+32}" cy="${y-3.4}" r="2.4" fill="#fff8ea"/>
+  <circle cx="${x+32}" cy="${y+3.4}" r="2.4" fill="#fff8ea"/></g>`;
+const riceMound = (cx=110,cy=98,w=62,h=26) => `
+  <path d="M${cx-w} ${cy} Q${cx-w*0.6} ${cy-h-8} ${cx} ${cy-h-8} Q${cx+w*0.6} ${cy-h-8} ${cx+w} ${cy} Q${cx} ${cy+9} ${cx-w} ${cy}Z" fill="#fffaf0"/>
+  <path d="M${cx-30} ${cy-8} q12 -7 24 -1 M${cx-2} ${cy-16} q12 -4 22 4 M${cx-16} ${cy+2} q12 -5 24 -1 M${cx+16} ${cy-2} q10 -3 18 4" stroke="#efe0c8" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
+const cornK = (x,y) => `<circle cx="${x}" cy="${y}" r="3.6" fill="#f6c453"/><circle cx="${x}" cy="${y}" r="1.4" fill="#ffe9a8"/>`;
+const goji = (x,y) => `<circle cx="${x}" cy="${y}" r="2.6" fill="#d84a3a"/>`;
+const woodEar = (x,y,r=0) => `<g transform="rotate(${r} ${x} ${y})"><ellipse cx="${x}" cy="${y}" rx="9" ry="6" fill="#3a3340"/><ellipse cx="${x-1}" cy="${y-1}" rx="5" ry="3" fill="#544a5e"/></g>`;
+const eggplantP = (x,y,r=0) => `<g transform="rotate(${r} ${x} ${y})">
+  <path d="M${x-6} ${y-12} q18 -4 22 12 q3 12 -10 14 q-16 2 -18 -10 q-1 -10 6 -16Z" fill="#5e3a70"/>
+  <path d="M${x-6} ${y-12} q4 -6 10 -6" stroke="#4f9e3d" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M${x} ${y-4} q8 4 12 12" stroke="#7a4f8e" stroke-width="2.4" fill="none" stroke-linecap="round"/></g>`;
+const fishSteamed = (cx=110,cy=96,c='#d98c5a') => `
+  <path d="M${cx-52} ${cy} l-20 -14 v28 Z" fill="${c}"/>
+  <ellipse cx="${cx}" cy="${cy}" rx="54" ry="19" fill="${c}"/>
+  <ellipse cx="${cx}" cy="${cy+4}" rx="54" ry="15" fill="${c}" opacity=".8"/>
+  <path d="M${cx+2} ${cy-16} q8 -10 14 -2 q-6 2 -14 2Z" fill="${c}"/>
+  <circle cx="${cx-34}" cy="${cy-4}" r="3" fill="#3a2418"/>
+  <path d="M${cx-46} ${cy-2} q4 6 10 4" stroke="#b06a3c" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+  <path d="M${cx-20} ${cy-4} q16 -10 40 0 M${cx-24} ${cy+4} q18 -8 44 0" stroke="rgba(255,255,255,.4)" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M${cx-14} ${cy-6} l16 -3 M${cx+8} ${cy-8} l15 1 M${cx-4} ${cy-2} l16 -2" stroke="#8fd47a" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M${cx-30} ${cy+8} q30 8 60 0" stroke="rgba(120,60,20,.25)" stroke-width="4" fill="none"/>`;
+const custardCup = () => wrap(shadow(110,140,60) + steam() + `
+  <path d="M64 88 Q64 126 110 126 Q156 126 156 88 Z" fill="#3f6e8a"/>
+  <path d="M76 100 Q82 118 110 120 Q138 118 144 100 Q110 110 76 100Z" fill="rgba(0,0,0,.1)"/>
+  <ellipse cx="110" cy="88" rx="46" ry="11" fill="#4d80a0"/>
+  <ellipse cx="110" cy="88" rx="38" ry="8.4" fill="#f8d564"/>
+  <ellipse cx="110" cy="88" rx="38" ry="8.4" fill="none" stroke="#e8b93e" stroke-width="2"/>
+  <path d="M88 86 q22 -6 44 0" stroke="rgba(255,255,255,.5)" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+  ${scallion(102,88)}${scallion(120,89)}`);
+const noodleDryPlate = (tops) => wrap(shadow() + `
+  <ellipse cx="110" cy="100" rx="86" ry="30" fill="#d8d2c4"/>
+  <ellipse cx="110" cy="95" rx="86" ry="30" fill="#f0ebe0"/>
+  <ellipse cx="110" cy="95" rx="70" ry="22" fill="#e8e0d0"/>
+  <path d="M46 89 q10 -7 20 0 t20 0 t20 0 t20 0 t20 0 M50 97 q10 -7 20 0 t20 0 t20 0 t20 0 t20 0 M58 105 q10 -7 20 0 t20 0 t20 0 t20 0" stroke="#f4d06f" stroke-width="4.4" fill="none" stroke-linecap="round"/>
+  <path d="M64 93 q10 -7 20 0 t20 0 t20 0 t20 0 M72 101 q10 -7 20 0 t20 0 t20 0" stroke="#eec25a" stroke-width="4.4" fill="none" stroke-linecap="round"/>
+  ${tops}`);
+function boiledDumplings() {
+  const one = (x, y, rot) => `
+    <g transform="rotate(${rot} ${x} ${y})">
+      <path d="M${x - 26} ${y + 10} q26 14 52 0 q-4 -26 -26 -26 q-22 0 -26 26Z" fill="#fbeed6" stroke="#e3cba1" stroke-width="2"/>
+      <path d="M${x - 20} ${y - 12} q4 -5 8 0 M${x - 8} ${y - 15} q4 -5 8 0 M${x + 4} ${y - 15} q4 -5 8 0 M${x + 14} ${y - 11} q4 -5 8 0" stroke="#e3cba1" stroke-width="2" fill="none"/>
+    </g>`;
+  return wrap(shadow(110,140,84) + one(70, 84, -10) + one(148, 82, 8) + one(108, 118, 0) + scallion(100, 40) + chiliOil(130, 44));
+}
+
+/* ==================== 42 道家常菜数据 ==================== */
+const FOODS = [
+  { n: '番茄炒蛋', e: '🍅', i: ['番茄 2个','鸡蛋 3个','小葱 1根','白糖 1小勺','盐 适量'],
+    t: '鸡蛋提供优质蛋白和卵磷脂;番茄富含番茄红素与维C。番茄红素是脂溶性的,和蛋一起炒吸收率更高,酸甜开胃又低脂,是国民下饭菜。',
+    img: () => plateLight(eggP(84,100,-10)+eggP(128,94,8)+eggP(106,80,0)+tomatoP(70,110,-14)+tomatoP(124,110,10)+tomatoP(96,116,0)+scallion(148,100)) },
+  { n: '辣椒炒肉', e: '🌶️', i: ['前腿肉 300g','螺丝椒 5根','蒜片 4瓣','豆豉 1小勺','生抽 1勺'],
+    t: '猪肉提供蛋白与B族维生素,青椒的维C含量是番茄的3倍多。急火快炒保留脆爽口感,湘菜下饭王者;注意控油更健康。',
+    img: () => plateLight(meatC(86,96,12)+meatC(124,92,10,' #a05a2c'.trim(),'#c07b45')+meatC(104,112,9)+chiliR(72,82,-20)+chiliR(138,102,16)+chiliR(114,76,-8)+greensDrop(148,88)) },
+  { n: '红烧肉', e: '🍖', i: ['五花肉 500g','冰糖 30g','八角 2个','桂皮 1小段','生抽老抽 3勺','料酒 2勺'],
+    t: '五花肉富含蛋白与脂肪,提供持久饱腹感和能量;炒糖色上色提香。含糖与脂肪较高,建议搭配清爽蔬菜同吃,解腻又均衡。',
+    img: () => plateLight(meatC(84,98,13,'#8a4a26','#a86338')+meatC(122,94,12,'#8a4a26','#a86338')+meatC(106,114,11,'#8a4a26','#a86338')+meatC(136,114,10,'#96522a','#b5744a')+`<path d="M76 90 q8 -6 16 -2 M118 86 q8 -4 14 2" stroke="rgba(255,240,200,.5)" stroke-width="3" fill="none" stroke-linecap="round"/>`+greensDrop(64,110)) },
+  { n: '可乐鸡翅', e: '🍗', i: ['鸡翅中 10个','可乐 1罐','生抽 2勺','姜片 3片','料酒 1勺'],
+    t: '鸡肉高蛋白低脂肪、易消化吸收;可乐代替炒糖色省事,收汁后咸甜适口、色泽红亮,孩子最爱。偶尔吃解馋无负担。',
+    img: () => plateLight(legP(74,92,18,'#b0622c')+legP(142,88,-14,'#b0622c')+legP(108,118,4,'#9a5222')+greensDrop(160,110)+scallion(56,106)) },
+  { n: '糖醋排骨', e: '🍖', i: ['肋排 500g','冰糖 40g','香醋 3勺','生抽 2勺','料酒 2勺','白芝麻 少许'],
+    t: '排骨提供优质蛋白、钙和胶原蛋白;糖醋口促进食欲。含糖较高,孩子解馋、成人适量,撒芝麻补一点钙和维E。',
+    img: () => plateLight(ribP(78,88,-16)+ribP(126,84,12)+ribP(102,110,-4)+ribP(146,110,20)+`<circle cx="88" cy="96" r="1.6" fill="#5c4420"/><circle cx="118" cy="92" r="1.6" fill="#5c4420"/><circle cx="134" cy="102" r="1.6" fill="#5c4420"/>`+greensDrop(60,106)+scallion(160,92)) },
+  { n: '宫保鸡丁', e: '🥜', i: ['鸡胸肉 300g','熟花生米 1把','干辣椒 8个','花椒 1小勺','大葱 1根','糖醋 生抽'],
+    t: '鸡胸肉高蛋白低脂;花生富含不饱和脂肪酸和维E。糊辣荔枝口咸甜微酸,经典川菜;花生临出锅再放,保持酥脆。',
+    img: () => plateDark(meatC(88,92,8,'#d9a05a','#efc284')+meatC(126,96,10,'#d9a05a','#efc284')+meatC(106,112,7,'#d9a05a','#efc284')+peanut(72,108)+peanut(140,84)+peanut(120,76)+chiliR(94,76,-14)+chiliR(146,108,18)+scallion(64,88)+`<circle cx="100" cy="88" r="1.8" fill="#e53935"/>`) },
+  { n: '鱼香肉丝', e: '🥕', i: ['猪里脊 250g','干木耳 1小把','胡萝卜 半根','青椒 1个','郫县豆瓣酱 1勺','葱姜蒜 适量'],
+    t: '里脊肉低脂高蛋白,木耳补铁补膳食纤维,胡萝卜素护眼。咸甜酸辣平衡的鱼香汁,超级下饭,荤素搭配一盘搞定。',
+    img: () => plateLight(`<rect x="64" y="92" width="30" height="5.4" rx="2.7" fill="#b0622c" transform="rotate(-12 79 94)"/><rect x="96" y="86" width="30" height="5.4" rx="2.7" fill="#c07b45" transform="rotate(8 111 88)"/><rect x="118" y="104" width="28" height="5.4" rx="2.7" fill="#b0622c" transform="rotate(-6 132 106)"/>`+carrotP(84,108,-14)+carrotP(140,90,12)+woodEar(104,96)+woodEar(140,116)+woodEar(70,80)+pepperBit(96,76)+chiliR(120,72,-10)) },
+  { n: '回锅肉', e: '🧅', i: ['带皮五花肉 400g','蒜苗 3根','郫县豆瓣酱 1.5勺','甜面酱 1小勺','姜 料酒'],
+    t: '先煮后炒逼出部分油脂,肥而不腻、灯盏窝最香;蒜苗含大蒜素,提振食欲。豆瓣酱发酵风味浓郁,配二两米饭正好。',
+    img: () => plateLight(meatC(84,94,12,'#c98a5a','#e8c9a8')+meatC(122,98,10,'#c98a5a','#e8c9a8')+meatC(104,112,12,'#b57a48','#d9ab80')+leafBig(70,78,-14)+leafBig(140,80,12)+leafBig(116,70,0)+chiliR(64,104,22)+greensDrop(152,110)) },
+  { n: '麻婆豆腐', e: '🥘', i: ['嫩豆腐 1块','猪肉末 100g','郫县豆瓣酱 1勺','花椒面 1小勺','蒜苗 少许','水淀粉'],
+    t: '豆腐富含植物蛋白和钙,肉末补充铁与B12。麻、辣、烫、鲜、嫩俱全的拌饭神器;高血压人群可做少盐版。',
+    img: () => plateDark(tofuC(84,94,10)+tofuC(122,92,10,-6)+tofuC(104,114,9,4)+meatLump(138,108,'#8a4a26','#a86338',6)+chiliOil(70,84)+chiliOil(140,80)+scallion(98,80)+`<circle cx="116" cy="76" r="1.6" fill="#6b4420"/><circle cx="88" cy="76" r="1.6" fill="#6b4420"/>`) },
+  { n: '水煮肉片', e: '🌶️', i: ['猪里脊 300g','黄豆芽 1把','莴笋 半根','郫县豆瓣酱 2勺','干辣椒 花椒','蛋清 淀粉'],
+    t: '里脊肉上浆滑熟,嫩而高蛋白;豆芽莴笋补充纤维和维C。红油较重,香辣过瘾,肠胃敏感者适量,汤上的油可撇掉一些。',
+    img: () => plateDark(`<ellipse cx="110" cy="105" rx="70" ry="20" fill="#c8481f"/>`+beefSlice(86,96,-8)+beefSlice(124,92,6)+beefSlice(104,110,-4)+chiliR(70,86,-18)+chiliR(142,104,16)+chiliR(100,80,-8)+`<circle cx="130" cy="84" r="2" fill="#5c4420"/><circle cx="78" cy="106" r="2" fill="#5c4420"/><circle cx="150" cy="92" r="2" fill="#5c4420"/>`+greensDrop(64,92)+scallion(112,96)) },
+  { n: '土豆炖牛肉', e: '🥔', i: ['牛腩 500g','土豆 2个','胡萝卜 1根','八角 1个','生抽 老抽','姜片'],
+    t: '牛肉富含血红素铁、锌和优质蛋白,小火慢炖软烂好吸收;土豆提供碳水和钾。一锅出,荤菜主食全有了。',
+    img: () => soupBowlV({ bowl:'#c96a3a', bowl2:'#d97c4a', broth:'#c98a5a',
+      tops: meatC(84,72,9,'#8a4a26','#a86338')+meatC(128,74,8,'#8a4a26','#a86338')+meatC(106,62,8,'#8a4a26','#a86338')+potatoC(66,80,8)+potatoC(146,72,8,-10)+carrotP(100,82,14)+scallion(120,84)+greensDrop(140,84) }) },
+  { n: '西红柿牛腩', e: '🍅', i: ['牛腩 500g','番茄 3个','洋葱 半个','番茄酱 1勺','姜片 糖'],
+    t: '牛肉补铁补蛋白;番茄的果酸让牛腩更快软烂,番茄红素与维C双重抗氧化。汤汁酸甜浓郁,泡饭一绝。',
+    img: () => soupBowlV({ bowl:'#b83c30', bowl2:'#cc5240', broth:'#e8905a',
+      tops: meatC(88,72,9,'#8a4a26','#a86338')+meatC(126,70,8,'#8a4a26','#a86338')+tomatoP(68,80,-10)+tomatoP(142,76,12)+tomatoP(106,84,0)+scallion(116,62) }) },
+  { n: '清蒸鲈鱼', e: '🐟', i: ['鲈鱼 1条','姜丝 葱丝','蒸鱼豉油 3勺','料酒 1勺','食用油 1勺'],
+    t: '鲈鱼高蛋白低脂肪,DHA丰富有益大脑和视力;清蒸最大程度保留营养,热量低,减脂期、老人孩子都适合。',
+    img: () => plateLight(fishSteamed(110,100,'#d98c5a')+chiliR(70,86,-20)+greensDrop(158,92)+`<path d="M84 120 q26 6 52 0" stroke="rgba(120,80,20,.2)" stroke-width="3" fill="none"/>`) },
+  { n: '红烧鱼', e: '🐟', i: ['草鱼/鲫鱼 1条','葱姜蒜','生抽 老抽','白糖 1勺','料酒 香醋'],
+    t: '鱼肉蛋白细嫩易消化,含不饱和脂肪酸,对心脑血管友好;红烧汁浓香下饭。小刺多的鱼给孩子吃时注意挑刺。',
+    img: () => plateLight(fishSteamed(110,100,'#b5743c')+`<path d="M74 116 q36 10 72 0 q-36 8 -72 0Z" fill="rgba(140,70,20,.35)"/>`+chiliR(66,88,-18)+chiliR(152,102,14)+scallion(84,124)) },
+  { n: '青椒肉丝', e: '🫑', i: ['猪里脊 250g','青椒 3个','蒜片 3瓣','生抽 1勺','淀粉 1小勺'],
+    t: '经典快手下饭菜:里脊低脂高蛋白,青椒维C丰富;全程大火5分钟出锅,营养流失少,打工人的救星菜。',
+    img: () => plateLight(`<rect x="66" y="92" width="32" height="5.4" rx="2.7" fill="#b0622c" transform="rotate(-10 82 94)"/><rect x="102" y="86" width="30" height="5.4" rx="2.7" fill="#c07b45" transform="rotate(10 117 88)"/><rect x="88" y="110" width="30" height="5.4" rx="2.7" fill="#b0622c" transform="rotate(-6 103 112)"/>`+leafBig(74,78,-12)+leafBig(134,80,10)+leafBig(140,108,6)+leafBig(96,74,0)) },
+  { n: '木须肉', e: '🥚', i: ['猪里脊 200g','鸡蛋 3个','干木耳 1小把','黄瓜 半根','葱姜 料酒'],
+    t: '荤、素、蛋三合一:动物蛋白与植物蛋白互补,木耳铁和膳食纤维高,黄瓜清爽解腻;颜色漂亮,营养全面。',
+    img: () => plateLight(eggP(84,96,-8)+eggP(124,92,8)+meatLump(104,108,'#b0622c','#cf8450',7)+woodEar(70,84)+woodEar(140,104)+woodEar(96,78)+`<circle cx="146" cy="82" r="7" fill="#8fd47a"/><circle cx="146" cy="82" r="4" fill="#c8f0b0"/>`+`<circle cx="66" cy="108" r="7" fill="#8fd47a"/><circle cx="66" cy="108" r="4" fill="#c8f0b0"/>`) },
+  { n: '红烧茄子', e: '🍆', i: ['长茄子 2根','蒜末 5瓣','生抽 2勺','白糖 1勺','香醋 1勺','淀粉'],
+    t: '茄子皮含花青素抗氧化。先蒸后烧比传统过油少一半热量,照样香浓下饭;蒜蓉是灵魂,多放不亏。',
+    img: () => plateDark(eggplantP(84,92,-8)+eggplantP(124,88,10)+eggplantP(104,112,4)+`<circle cx="76" cy="106" r="2.2" fill="#f7ecd7"/><circle cx="112" cy="94" r="2.2" fill="#f7ecd7"/><circle cx="140" cy="106" r="2.2" fill="#f7ecd7"/>`+greensDrop(64,86)+scallion(152,92)) },
+  { n: '地三鲜', e: '🥔', i: ['土豆 1个','茄子 1根','青椒 2个','蒜末 3瓣','生抽 蚝油 糖'],
+    t: '东北名菜:土豆供能补钾,茄子纤维丰富,青椒维C高。少油煎代替过油,更清爽不腻,酱汁裹满超级下饭。',
+    img: () => plateDark(potatoC(84,92,11)+potatoC(120,88,10,-8)+eggplantP(104,110,6)+leafBig(72,78,-10)+leafBig(142,104,8)+`<circle cx="96" cy="82" r="2.2" fill="#f7ecd7"/><circle cx="130" cy="102" r="2.2" fill="#f7ecd7"/>`) },
+  { n: '干煸豆角', e: '🫘', i: ['四季豆 400g','肉末 80g','干辣椒 6个','蒜末 花椒','生抽 1勺'],
+    t: '四季豆富含植物蛋白和膳食纤维,煸到虎皮起皱最香。务必彻底炒熟——生的四季豆含皂苷会中毒,这点最重要。',
+    img: () => plateLight(`<path d="M64 84 q22 -12 40 2 M84 96 q24 -12 42 0 M70 110 q22 -10 40 2 M120 80 q20 -8 34 4" stroke="#4f9e3d" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M70 80 q18 -8 32 2 M92 104 q18 -8 32 0 M108 92 q18 -8 32 2" stroke="#6ec253" stroke-width="5" fill="none" stroke-linecap="round"/>`+meatLump(96,74,'#8a4a26','#a86338',5)+meatLump(140,108,'#8a4a26','#a86338',5)+chiliR(64,100,20)+chiliR(150,88,-16)) },
+  { n: '蒜蓉西兰花', e: '🥦', i: ['西兰花 1颗','蒜末 6瓣','盐 适量','蚝油 半勺'],
+    t: '西兰花是十字花科营养之王:维C、维K、叶酸和萝卜硫素含量突出。水开烫1分钟再快炒,营养保留最多,减脂必备。',
+    img: () => plateLight(`<circle cx="84" cy="92" r="14" fill="#4f9e3d"/><circle cx="104" cy="80" r="12" fill="#61b84c"/><circle cx="126" cy="92" r="13" fill="#4f9e3d"/><circle cx="112" cy="104" r="11" fill="#61b84c"/><circle cx="92" cy="110" r="10" fill="#3f8a30"/><circle cx="80" cy="82" r="9" fill="#3f8a30"/><circle cx="134" cy="104" r="9" fill="#3f8a30"/><circle cx="122" cy="72" r="8" fill="#3f8a30"/>`+`<circle cx="84" cy="92" r="6" fill="#6ec253"/><circle cx="126" cy="92" r="5.4" fill="#6ec253"/><circle cx="104" cy="80" r="5" fill="#8fd47a"/>`+`<circle cx="96" cy="92" r="2" fill="#f7ecd7"/><circle cx="116" cy="84" r="2" fill="#f7ecd7"/><circle cx="132" cy="98" r="2" fill="#f7ecd7"/>`+`<path d="M62 96 q-8 8 0 14 M158 96 q8 8 0 14" stroke="#4f9e3d" stroke-width="5" fill="none" stroke-linecap="round"/>`) },
+  { n: '醋溜土豆丝', e: '🥔', i: ['土豆 2个','干辣椒 3个','香醋 2勺','蒜末 葱花'],
+    t: '土豆的维C含量是苹果的4倍;切丝冲水去淀粉更爽脆,醋能保护维C少受热损失。酸辣开胃、低脂实惠。',
+    img: () => plateLight(`<rect x="62" y="88" width="34" height="4.4" rx="2.2" fill="#e8c48a" transform="rotate(-8 79 90)"/><rect x="100" y="82" width="34" height="4.4" rx="2.2" fill="#d9b06e" transform="rotate(6 117 84)"/><rect x="126" y="98" width="32" height="4.4" rx="2.2" fill="#e8c48a" transform="rotate(-10 142 100)"/><rect x="72" y="108" width="34" height="4.4" rx="2.2" fill="#d9b06e" transform="rotate(8 89 110)"/><rect x="96" y="104" width="30" height="4.4" rx="2.2" fill="#e8c48a" transform="rotate(-4 111 106)"/><rect x="88" y="94" width="32" height="4.4" rx="2.2" fill="#f0d4a0" transform="rotate(10 104 96)"/>`+chiliR(70,78,-16)+chiliR(146,84,14)+scallion(120,76)+scallion(64,102)) },
+  { n: '酸辣白菜', e: '🥬', i: ['大白菜 半颗','干辣椒 4个','香醋 2勺','白糖 1小勺','花椒 几粒'],
+    t: '白菜冬天最养人:水分足、纤维多、热量极低;酸辣脆爽特别解腻,配红烧肉正好。醋溜做法维C损失也小。',
+    img: () => plateLight(`<path d="M72 104 q-6 -28 14 -36 q4 22 -4 36Z" fill="#f4ecd6"/><path d="M80 68 q20 4 22 34 q-16 4 -22 -8" fill="#e8f0c8"/><path d="M110 108 q-2 -30 20 -36 q2 24 -8 38Z" fill="#f4ecd6"/><path d="M130 72 q18 8 14 38 q-14 2 -18 -10" fill="#e8f0c8"/><path d="M86 72 l4 30 M122 76 l0 30" stroke="#cfe3bd" stroke-width="2.4"/>`+chiliR(68,86,-18)+chiliR(150,100,16)+`<circle cx="96" cy="110" r="2" fill="#e0452e"/><circle cx="140" cy="112" r="2" fill="#e0452e"/>`) },
+  { n: '韭菜炒蛋', e: '🥚', i: ['韭菜 1把','鸡蛋 3个','盐 适量'],
+    t: '韭菜含硫化物和膳食纤维,促进肠道蠕动,春天的头茬韭菜最鲜;配上鸡蛋补蛋白,5分钟出锅的懒人营养菜。',
+    img: () => plateLight(eggP(92,96,-8)+eggP(130,94,8)+eggP(110,112,0)+`<path d="M70 82 q-2 22 6 30 M82 78 q-2 24 8 32 M148 80 q2 22 -6 30" stroke="#4f9e3d" stroke-width="4.4" fill="none" stroke-linecap="round"/><path d="M62 88 q-2 18 4 26 M156 90 q2 16 -4 24" stroke="#61b84c" stroke-width="3.6" fill="none" stroke-linecap="round"/>`) },
+  { n: '虾仁滑蛋', e: '🍤', i: ['虾仁 250g','鸡蛋 4个','葱花','盐 白胡椒'],
+    t: '虾高蛋白低脂,肉质松软好消化;蛋液小火推熟,口感嫩滑如布丁。老人孩子补充优质蛋白的首选,粤式经典。',
+    img: () => plateLight(`<path d="M60 100 Q80 78 110 80 Q150 82 160 100 Q110 112 60 100Z" fill="#ffe9a8"/>`+shrimp(78,88)+shrimp(118,84)+shrimp(142,96)+shrimp(96,98)+`<path d="M70 92 q30 -14 70 -4" stroke="#fff4d0" stroke-width="3" fill="none" opacity=".7"/>`+scallion(108,88)+scallion(132,102)) },
+  { n: '白灼虾', e: '🦐', i: ['鲜虾 500g','姜片 3片','葱段 2根','生抽 蘸料'],
+    t: '虾肉蛋白含量约20%、脂肪不到1%,白灼零负担;壳红肉甜,鲜味全保留。对虾过敏或痛风人群注意适量。',
+    img: () => plateLight(shrimpBig(78,88,-14,'#e8836b')+shrimpBig(126,84,10,'#e8836b')+shrimpBig(100,110,4,'#e8836b')+shrimpBig(148,110,16,'#e8836b')+`<circle cx="58" cy="106" r="7" fill="#f6e27a"/><path d="M58 99 l0 14 M58 106 l7 -4" stroke="#e8c44a" stroke-width="2"/>`+greensDrop(162,96)) },
+  { n: '油焖大虾', e: '🦐', i: ['大虾 10只','葱姜','番茄酱 1勺','白糖 生抽','料酒 1勺'],
+    t: '虾青素是强抗氧化剂,主要藏在虾壳里,油焖后连壳吃吸收更好;咸甜口,色泽红亮,孩子抢着吃的一道菜。',
+    img: () => plateLight(shrimpBig(80,88,-16,'#e05a3a')+shrimpBig(128,86,12,'#e05a3a')+shrimpBig(106,112,0,'#c94a2e')+`<path d="M66 116 q44 10 88 0 q-44 8 -88 0Z" fill="rgba(200,80,40,.35)"/>`+scallion(150,102)+scallion(66,94)) },
+  { n: '蛋炒饭', e: '🍚', i: ['隔夜米饭 1碗','鸡蛋 2个','火腿丁 适量','葱花','盐'],
+    t: '隔夜饭水分少,炒出来粒粒分明;蛋+饭氨基酸互补,一碗搞定碳水和蛋白。加把豌豆胡萝卜丁,营养更均衡。',
+    img: () => plateLight(riceMound(110,100,64,24)+eggP(88,86,-8)+eggP(130,90,10)+`<circle cx="72" cy="98" r="3.4" fill="#8fd47a"/><circle cx="148" cy="94" r="3.4" fill="#ef7d2e"/><circle cx="120" cy="108" r="3.4" fill="#8fd47a"/><rect x="98" y="76" width="12" height="8" rx="4" fill="#d97c6a"/>`+scallion(106,98)+scallion(84,108)) },
+  { n: '葱油拌面', e: '🍜', i: ['面条 2两','小葱 1把','生抽 老抽','白糖 1小勺','食用油'],
+    t: '小葱慢炸出的葱油香来自挥发性芳香物质,配简单三味调料,10分钟搞定;深夜食堂治愈款,碳水快乐很简单。',
+    img: () => noodleDryPlate(`<path d="M64 74 q46 -10 92 6" stroke="#c8a04a" stroke-width="5" fill="none" opacity=".5" stroke-linecap="round"/>`+scallion(88,84)+scallion(112,80)+scallion(136,86)+scallion(100,92)+scallion(124,94)+`<path d="M74 68 l0 -14 4 6 4 -6 0 14Z" fill="#4f9e3d"/>`) },
+  { n: '西红柿鸡蛋面', e: '🍅', i: ['面条 2两','番茄 2个','鸡蛋 2个','葱花','香油 几滴'],
+    t: '番茄红素+鸡蛋蛋白+碳水一碗全齐,汤面暖胃易消化;生病没胃口或加班夜归时,最熨帖的一碗。',
+    img: () => soupBowlV({ broth:'#e8905a', noodle:'#f2d98b',
+      tops: tomatoP(84,68,-10)+tomatoP(130,72,12)+eggP(108,64,0)+scallion(96,80)+scallion(140,78)+greensDrop(66,74) }) },
+  { n: '猪肉白菜水饺', e: '🥟', i: ['面粉 500g','猪肉馅 400g','大白菜 半颗','葱姜 花椒水','香油 生抽'],
+    t: '自己包的饺子:白菜杀水后和肉馅鲜嫩多汁;碳水、蛋白、纤维一锅全有。多包些冷冻,随吃随煮,比外卖快。',
+    img: () => boiledDumplings() },
+  { n: '香菇青菜', e: '🥬', i: ['上海青 8棵','鲜香菇 6朵','蒜末 3瓣','蚝油 1勺'],
+    t: '绿叶菜是叶酸和钙的好来源,香菇多糖有助免疫力,天然鲜味氨基酸提鲜;2分钟大火快炒最翠绿,清淡不过夜。',
+    img: () => plateLight(leafBig(74,88,-12)+leafBig(146,88,12)+leafBig(96,78,-4)+leafBig(126,78,4)+leafBig(110,110,0)+mushroomP(78,108)+mushroomP(146,110)+`<circle cx="60" cy="102" r="2.2" fill="#f7ecd7"/><circle cx="162" cy="104" r="2.2" fill="#f7ecd7"/>`) },
+  { n: '冬瓜排骨汤', e: '🍲', i: ['排骨 400g','冬瓜 500g','姜片 3片','葱花 盐'],
+    t: '冬瓜96%是水分且富含钾,清热利水;排骨久炖释出钙质与胶原蛋白。汤清味鲜不油腻,秋燥夏热都合适。',
+    img: () => soupBowlV({ broth:'#e8e4d2',
+      tops: ribP(96,70,-8)+`<rect x="128" y="64" width="22" height="12" rx="6" fill="#e2ecd8" opacity=".9"/><rect x="72" y="80" width="20" height="11" rx="5.5" fill="#e2ecd8" opacity=".9"/>`+scallion(116,80)+scallion(140,70)+goji(88,84) }) },
+  { n: '玉米排骨汤', e: '🌽', i: ['排骨 400g','甜玉米 2根','胡萝卜 1根','姜片 2片'],
+    t: '玉米膳食纤维和B族维生素丰富,汤自带清甜;胡萝卜素溶入汤中更易吸收。一家老小都爱喝的温和靓汤。',
+    img: () => soupBowlV({ broth:'#f2d8a0',
+      tops: ribP(92,70,-8)+cornK(126,64)+cornK(136,70)+cornK(146,64)+cornK(131,76)+cornK(120,72)+carrotP(78,82,10)+scallion(104,82)+goji(150,78) }) },
+  { n: '番茄蛋花汤', e: '🍅', i: ['番茄 2个','鸡蛋 2个','葱花','香油 盐'],
+    t: '3块钱10分钟的国民汤:维C+蛋白,酸香开胃;饭前先喝一碗增加饱腹感,还能帮助控制食量。',
+    img: () => soupBowlV({ broth:'#e8905a',
+      tops: tomatoP(84,70,-8)+tomatoP(126,74,10)+`<path d="M64 78 q20 -10 40 0 t40 -2" stroke="#ffd873" stroke-width="4" fill="none" stroke-linecap="round" opacity=".9"/><path d="M70 72 q18 -8 34 0" stroke="#ffe9a8" stroke-width="3.4" fill="none" stroke-linecap="round"/>`+scallion(96,82)+scallion(140,80) }) },
+  { n: '紫菜蛋花汤', e: '🥣', i: ['紫菜 1小块','鸡蛋 2个','虾皮 1小勺','葱花 香油'],
+    t: '紫菜的碘和铁含量突出,虾皮补钙,蛋花补蛋白;一碗不到100千卡,快手脚手又营养,下雨天喝很暖。',
+    img: () => soupBowlV({ broth:'#d8cfb8',
+      tops: `<path d="M70 74 q10 -6 20 -2 q-8 6 -20 2Z" fill="#3a4a3e"/><path d="M118 70 q12 -6 22 0 q-10 6 -22 0Z" fill="#2f3e34"/><path d="M92 80 q10 -4 20 0 q-10 6 -20 0Z" fill="#3a4a3e"/>`+`<path d="M64 76 q22 -10 44 0 t40 -3" stroke="#ffd873" stroke-width="3.6" fill="none" stroke-linecap="round"/>`+`<circle cx="86" cy="70" r="1.8" fill="#e8b04a"/><circle cx="134" cy="78" r="1.8" fill="#e8b04a"/>`+scallion(108,68) }) },
+  { n: '山药排骨汤', e: '🍲', i: ['排骨 400g','铁棍山药 1根','枸杞 1小把','姜片 2片'],
+    t: '山药黏液蛋白温和护胃,淀粉易消化;枸杞的玉米黄素护眼。汤浓味醇,秋冬温补不燥,脾胃虚的最适合。',
+    img: () => soupBowlV({ broth:'#efe6d2',
+      tops: ribP(100,72,-6)+`<rect x="68" y="64" width="9" height="24" rx="4.5" fill="#f4ecd8" transform="rotate(-14 72 76)"/><rect x="138" y="62" width="9" height="26" rx="4.5" fill="#f4ecd8" transform="rotate(12 142 75)"/>`+goji(88,84)+goji(128,80)+goji(112,64)+scallion(84,72) }) },
+  { n: '啤酒鸭', e: '🦆', i: ['鸭肉 半只','啤酒 1罐','青椒 1个','姜片 蒜','生抽 老抽'],
+    t: '鸭肉不饱和脂肪酸比例高,性凉,燥热天吃正合适;啤酒去腥嫩肉,久烧收汁后酱香浓郁,越嚼越香。',
+    img: () => plateDark(legP(76,92,16,'#8a4a2c')+legP(140,88,-12,'#8a4a2c')+meatC(108,112,11,'#7a3e22','#9a5c38')+leafBig(160,104,8)+chiliR(64,80,-20)+chiliR(126,74,-10)+greensDrop(150,80)) },
+  { n: '土豆烧鸡', e: '🍗', i: ['鸡腿 2个','土豆 2个','干香菇 4朵','八角 1个','生抽 老抽'],
+    t: '鸡腿肉比鸡胸更嫩、铁含量更高,土豆吸饱汤汁绵糯,香菇增鲜。一锅炖好,配米饭就是完整一餐。',
+    img: () => soupBowlV({ bowl:'#a8542e', bowl2:'#bc6438', broth:'#c88a4a',
+      tops: meatC(84,72,10,'#b0622c','#cf8450')+meatC(126,70,9,'#b0622c','#cf8450')+potatoC(104,62,9)+potatoC(146,80,8,-8)+mushroomP(70,82,0.7)+scallion(116,82)+greensDrop(136,64) }) },
+  { n: '咖喱鸡肉', e: '🍛', i: ['鸡腿肉 400g','土豆 胡萝卜 洋葱','咖喱块 3小块','椰浆/牛奶 可选'],
+    t: '姜黄素是咖喱的灵魂,有抗炎抗氧化作用;土豆胡萝卜洋葱一锅炖,甜咸微辣,浇在米饭上,全家都爱。',
+    img: () => plateLight(`<ellipse cx="104" cy="102" rx="58" ry="17" fill="#f0a92d"/>`+meatC(84,96,8,'#d9a05a','#efc284')+meatC(122,98,8,'#d9a05a','#efc284')+potatoC(104,90,8)+carrotP(140,92,10)+`<circle cx="70" cy="104" r="7" fill="#c8a4d8" opacity=".85"/>`+`<path d="M56 98 q48 14 96 0" stroke="rgba(255,240,190,.5)" stroke-width="3" fill="none"/>`+riceMound(170,74,34,14)) },
+  { n: '蒸蛋羹', e: '🥣', i: ['鸡蛋 3个','温水 约300ml','葱花','香油 生抽'],
+    t: '蛋液与温水1:1.5、过筛后蒸出镜面嫩滑;蛋白质几乎100%消化吸收,是最温柔的蛋白补充,老人孩子病号餐首选。',
+    img: () => custardCup() },
+  { n: '手撕包菜', e: '🥬', i: ['包菜 半颗','五花肉片 100g','干辣椒 4个','蒜末','香醋 生抽'],
+    t: '包菜维C含量比柑橘还高,手撕的断面更挂味;大火快炒保持脆嫩,酸辣锅气足,成本不到5块钱的下饭神器。',
+    img: () => plateLight(cabbageL(84,88,-10)+cabbageL(134,86,10)+cabbageL(108,108,0)+cabbageL(148,110,14)+`<rect x="64" y="94" width="26" height="9" rx="4.5" fill="#c07b45" transform="rotate(-14 77 98)"/>`+chiliR(70,78,-18)+chiliR(140,100,16)) },
+  { n: '萝卜炖羊肉', e: '🍲', i: ['羊肉 500g','白萝卜 1根','姜片 花椒','葱花 香菜'],
+    t: '羊肉富含蛋白和铁,冬天吃暖身御寒;白萝卜助消化、解油腻,膳食纤维平衡荤腥。汤鲜肉烂,不加味精也鲜。',
+    img: () => soupBowlV({ bowl:'#8a5a3a', bowl2:'#a06a46', broth:'#e8dcc8',
+      tops: meatC(88,72,9,'#9a522a','#b5744a')+meatC(126,70,8,'#9a522a','#b5744a')+`<rect x="106" y="62" width="9" height="22" rx="4.5" fill="#f4ecd8"/><rect x="68" y="78" width="20" height="10" rx="5" fill="#f4ecd8"/><rect x="138" y="78" width="20" height="10" rx="5" fill="#f4ecd8"/>`+goji(96,84)+scallion(116,82)+greensDrop(146,66) }) },
+];
+
+/* ==================== 转盘绘制 ==================== */
+const N = FOODS.length;
+const SEG = 360 / N;
+const canvas = document.getElementById('wheel');
+let rot = 0, spinning = false, soundOn = true;
+
+function drawWheel() {
+  const dpr = window.devicePixelRatio || 1;
+  const size = canvas.clientWidth;
+  canvas.width = size * dpr;
+  canvas.height = size * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const cx = size / 2, cy = size / 2, R = size / 2 - 4;
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, 0, Math.PI * 2);
+  const rim = ctx.createLinearGradient(0, 0, size, size);
+  rim.addColorStop(0, '#e8ffd8'); rim.addColorStop(.5, '#a9e29a'); rim.addColorStop(1, '#d8f5c8');
+  ctx.fillStyle = rim;
+  ctx.fill();
+
+  const inner = R * 0.93;
+  for (let i = 0; i < N; i++) {
+    const a0 = (i * SEG - 90) * Math.PI / 180;
+    const a1 = ((i + 1) * SEG - 90) * Math.PI / 180;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, inner, a0, a1);
+    ctx.closePath();
+    ctx.fillStyle = i % 2 ? '#f0f7e6' : '#2f6e24';
+    ctx.fill();
+  }
+  ctx.save();
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'middle';
+  ctx.font = `700 ${Math.max(11, size * 0.036)}px "PingFang SC","Microsoft YaHei",sans-serif`;
+  for (let i = 0; i < N; i++) {
+    const mid = (i * SEG + SEG / 2 - 90) * Math.PI / 180;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(mid);
+    ctx.fillStyle = i % 2 ? '#2f6e24' : '#f4ffe8';
+    ctx.fillText(FOODS[i].n, inner - 10, 0);
+    ctx.restore();
+  }
+  ctx.restore();
+
+  const bulbR = (R + inner) / 2;
+  for (let i = 0; i < 24; i++) {
+    const a = (i * 15 - 90) * Math.PI / 180;
+    ctx.beginPath();
+    ctx.arc(cx + Math.cos(a) * bulbR, cy + Math.sin(a) * bulbR, size * 0.008, 0, Math.PI * 2);
+    ctx.fillStyle = i % 2 ? '#ffffff' : '#8fd47a';
+    ctx.fill();
+  }
+  ctx.beginPath();
+  ctx.arc(cx, cy, size * 0.185, 0, Math.PI * 2);
+  ctx.fillStyle = '#245318';
+  ctx.fill();
+  ctx.lineWidth = size * 0.008;
+  ctx.strokeStyle = '#a9e29a';
+  ctx.stroke();
+}
+drawWheel();
+window.addEventListener('resize', drawWheel);
+
+/* ==================== 声音 ==================== */
+let audioCtx = null;
+function ac() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+function tick() {
+  if (!soundOn) return;
+  try {
+    const ctx = ac(), o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'square'; o.frequency.value = 1750;
+    g.gain.setValueAtTime(.08, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.0001, ctx.currentTime + .045);
+    o.connect(g).connect(ctx.destination);
+    o.start(); o.stop(ctx.currentTime + .05);
+  } catch (e) {}
+}
+function fanfare() {
+  if (!soundOn) return;
+  try {
+    const ctx = ac();
+    [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'triangle'; o.frequency.value = f;
+      const t0 = ctx.currentTime + i * 0.11;
+      g.gain.setValueAtTime(.0001, t0);
+      g.gain.exponentialRampToValueAtTime(.14, t0 + .02);
+      g.gain.exponentialRampToValueAtTime(.0001, t0 + .3);
+      o.connect(g).connect(ctx.destination);
+      o.start(t0); o.stop(t0 + .32);
+    });
+  } catch (e) {}
+}
+document.getElementById('soundBtn').addEventListener('click', function () {
+  soundOn = !soundOn;
+  this.textContent = soundOn ? '🔔' : '🔕';
+});
+
+/* ==================== 转动逻辑 ==================== */
+function pointerIndex(r) {
+  const a = ((-(r % 360)) % 360 + 360) % 360;
+  return Math.floor(a / SEG) % N;
+}
+const easeOutQuart = t => 1 - Math.pow(1 - t, 4);
+
+function spin() {
+  if (spinning) return;
+  spinning = true;
+  document.getElementById('goBtn').style.pointerEvents = 'none';
+  const winner = Math.floor(Math.random() * N);
+  const jitter = (Math.random() * 0.7 - 0.35) * SEG;
+  const targetCenter = winner * SEG + SEG / 2;
+  const cur = ((rot % 360) + 360) % 360;
+  let delta = ((-(targetCenter + jitter)) - cur) % 360;
+  if (delta < 0) delta += 360;
+  const finalRot = rot + 360 * (5 + Math.floor(Math.random() * 3)) + delta;
+  const duration = 4400 + Math.random() * 1400;
+  const startRot = rot, startT = performance.now();
+  let lastIdx = pointerIndex(rot);
+
+  function frame(now) {
+    const t = Math.min(1, (now - startT) / duration);
+    rot = startRot + (finalRot - startRot) * easeOutQuart(t);
+    canvas.style.transform = `rotate(${rot}deg)`;
+    const idx = pointerIndex(rot);
+    if (idx !== lastIdx) { lastIdx = idx; tick(); }
+    if (t < 1) {
+      requestAnimationFrame(frame);
+    } else {
+      spinning = false;
+      document.getElementById('goBtn').style.pointerEvents = '';
+      showResult(pointerIndex(finalRot));
+    }
+  }
+  requestAnimationFrame(frame);
+}
+document.getElementById('goBtn').addEventListener('click', spin);
+canvas.addEventListener('click', spin);
+window.addEventListener('keydown', e => {
+  if (e.code === 'Space') { e.preventDefault(); spin(); }
+});
+
+/* ==================== 结果弹窗 ==================== */
+const mask = document.getElementById('modalMask');
+function showResult(i) {
+  const f = FOODS[i];
+  document.getElementById('modalArt').innerHTML = f.img();
+  document.getElementById('modalDish').textContent = f.n;
+  const row = document.getElementById('ingrRow');
+  row.innerHTML = '';
+  f.i.forEach(name => {
+    const chip = document.createElement('span');
+    chip.className = 'ingr-chip';
+    chip.textContent = name;
+    row.appendChild(chip);
+  });
+  document.getElementById('nutrText').textContent = f.t;
+  mask.classList.add('show');
+  fanfare();
+  confettiBurst();
+  pushHistory(f);
+}
+function closeResult(again) {
+  mask.classList.remove('show');
+  if (again) setTimeout(spin, 260);
+}
+document.getElementById('btnOk').addEventListener('click', () => closeResult(false));
+document.getElementById('btnAgain').addEventListener('click', () => closeResult(true));
+mask.addEventListener('click', e => { if (e.target === mask) closeResult(false); });
+
+/* ==================== 历史 ==================== */
+const HKEY = 'cookwheel-history';
+function loadHistory() {
+  try { return JSON.parse(localStorage.getItem(HKEY)) || []; } catch (e) { return []; }
+}
+function pushHistory(f) {
+  let h = loadHistory();
+  h = h.filter(x => x.n !== f.n);
+  h.unshift({ n: f.n, e: f.e });
+  h = h.slice(0, 12);
+  localStorage.setItem(HKEY, JSON.stringify(h));
+  renderHistory();
+}
+function renderHistory() {
+  const h = loadHistory();
+  const box = document.getElementById('histChips');
+  const empty = document.getElementById('histEmpty');
+  box.innerHTML = '';
+  h.forEach(x => {
+    const c = document.createElement('span');
+    c.className = 'chip';
+    c.textContent = x.e + ' ' + x.n;
+    box.appendChild(c);
+  });
+  empty.style.display = h.length ? 'none' : 'block';
+}
+renderHistory();
+
+/* ==================== 彩带 ==================== */
+const cf = document.getElementById('confetti');
+const cfx = cf.getContext('2d');
+let parts = [], cfRunning = false;
+function sizeConfetti() {
+  cf.width = innerWidth; cf.height = innerHeight;
+}
+sizeConfetti();
+window.addEventListener('resize', sizeConfetti);
+function confettiBurst() {
+  const colors = ['#a9e29a', '#ffd54a', '#eafff0', '#6fbf4a', '#fff3cf', '#8fd47a'];
+  for (let i = 0; i < 130; i++) {
+    parts.push({
+      x: innerWidth / 2 + (Math.random() - .5) * 160,
+      y: innerHeight * .38,
+      vx: (Math.random() - .5) * 13,
+      vy: -6 - Math.random() * 9,
+      s: 5 + Math.random() * 6,
+      c: colors[Math.floor(Math.random() * colors.length)],
+      r: Math.random() * Math.PI, vr: (Math.random() - .5) * .3,
+      life: 1
+    });
+  }
+  if (!cfRunning) { cfRunning = true; requestAnimationFrame(cfFrame); }
+}
+function cfFrame() {
+  cfx.clearRect(0, 0, cf.width, cf.height);
+  parts.forEach(p => {
+    p.vy += .32; p.x += p.vx; p.y += p.vy; p.vx *= .99; p.r += p.vr; p.life -= .008;
+    cfx.save();
+    cfx.translate(p.x, p.y);
+    cfx.rotate(p.r);
+    cfx.globalAlpha = Math.max(0, p.life);
+    cfx.fillStyle = p.c;
+    cfx.fillRect(-p.s / 2, -p.s / 2, p.s, p.s * .62);
+    cfx.restore();
+  });
+  parts = parts.filter(p => p.life > 0 && p.y < cf.height + 30);
+  if (parts.length) { requestAnimationFrame(cfFrame); }
+  else { cfRunning = false; cfx.clearRect(0, 0, cf.width, cf.height); }
+}
+</script>
+</body>
+</html>

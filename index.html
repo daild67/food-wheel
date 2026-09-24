@@ -3,21 +3,17 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>今日吃啥 · 美食大转盘</title>
+<title>今日吃啥 · 在家做还是出去吃？</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { height: 100%; }
   body {
     font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
     background: radial-gradient(1200px 700px at 50% -10%, #5a1c14 0%, #3a0f0c 45%, #260a09 100%);
     color: #fff7e6;
     min-height: 100vh;
     overflow-x: hidden;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    display: flex; flex-direction: column; align-items: center;
   }
-  /* ---------- 灯笼装饰 ---------- */
   .lantern { position: fixed; top: -8px; z-index: 1; pointer-events: none; }
   .lantern.l1 { left: 4vw; }
   .lantern.l2 { right: 4vw; }
@@ -26,9 +22,7 @@
     width: 54px; height: 68px; border-radius: 46%;
     background: radial-gradient(circle at 38% 32%, #ff7a5c, #d7263d 62%, #9c1425);
     box-shadow: 0 0 26px 4px rgba(255, 90, 60, .35);
-    position: relative;
-    animation: sway 4.2s ease-in-out infinite;
-    transform-origin: top center;
+    position: relative; animation: sway 4.2s ease-in-out infinite; transform-origin: top center;
   }
   .lantern.l2 .body { animation-delay: -2.1s; }
   .lantern .body::before, .lantern .body::after {
@@ -44,963 +38,128 @@
   @keyframes sway { 0%,100% { transform: rotate(3deg); } 50% { transform: rotate(-3deg); } }
   @media (max-width: 640px) { .lantern { display: none; } }
 
-  /* ---------- 头部 ---------- */
-  header { text-align: center; padding: 30px 16px 6px; z-index: 2; }
+  header { text-align: center; padding: 44px 16px 8px; z-index: 2; }
   h1 {
     font-family: "Kaiti SC", "STKaiti", "KaiTi", "PingFang SC", serif;
-    font-size: clamp(30px, 6vw, 46px);
-    letter-spacing: 4px;
+    font-size: clamp(30px, 6vw, 46px); letter-spacing: 4px;
     background: linear-gradient(180deg, #ffe9b0 15%, #f6c453 55%, #e09b2d 90%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
     filter: drop-shadow(0 3px 6px rgba(0,0,0,.45));
   }
-  .sub { margin-top: 10px; font-size: 14px; color: #f3cfa0; opacity: .85; letter-spacing: 1px; }
-  .sub b { color: #ffd98a; font-weight: 600; }
+  .sub { margin-top: 12px; font-size: 15px; color: #f3cfa0; opacity: .85; letter-spacing: 2px; }
 
-  /* ---------- 转盘 ---------- */
-  .wheel-zone { position: relative; margin-top: 18px; z-index: 2; }
-  .wheel-wrap {
-    position: relative;
-    width: min(88vw, 500px);
-    aspect-ratio: 1 / 1;
-    filter: drop-shadow(0 18px 40px rgba(0,0,0,.5));
+  .cards {
+    display: flex; gap: clamp(16px, 4vw, 36px);
+    flex-wrap: wrap; justify-content: center;
+    margin: 42px 16px 20px; z-index: 2;
   }
-  #wheel { width: 100%; height: 100%; display: block; cursor: pointer; will-change: transform; }
-  .pointer {
-    position: absolute; top: -6px; left: 50%; transform: translateX(-50%);
-    width: 0; height: 0; z-index: 5;
-    border-left: 17px solid transparent; border-right: 17px solid transparent;
-    border-top: 34px solid #ffd54a;
-    filter: drop-shadow(0 3px 4px rgba(0,0,0,.45));
+  .card {
+    width: min(42vw, 300px);
+    border-radius: 24px; overflow: hidden; cursor: pointer;
+    text-decoration: none; color: inherit;
+    border: 1.5px solid rgba(255, 213, 74, .35);
+    background: linear-gradient(180deg, rgba(255, 233, 176, .08), rgba(255, 233, 176, .02));
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    display: flex; flex-direction: column;
   }
-  .pointer::after {
-    content: ""; position: absolute; top: -34px; left: -11px;
-    width: 22px; height: 22px; border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, #ffe9a8, #f0a92d);
-    border: 2px solid #a8641a;
+  .card:hover {
+    transform: translateY(-6px);
+    border-color: rgba(255, 213, 74, .8);
+    box-shadow: 0 18px 40px rgba(0,0,0,.45);
   }
-  #goBtn {
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    width: 27%; aspect-ratio: 1 / 1; border-radius: 50%;
-    border: 5px solid #ffe08a;
-    background: radial-gradient(circle at 36% 30%, #ff6b52, #d7263d 60%, #9c1425);
-    color: #fff7e0; cursor: pointer; z-index: 4;
-    font-size: clamp(20px, 5.4vw, 32px); font-weight: 700; letter-spacing: 2px;
-    font-family: "Kaiti SC", "STKaiti", "KaiTi", serif;
-    box-shadow: 0 8px 22px rgba(0,0,0,.5), inset 0 -6px 14px rgba(0,0,0,.28);
-    transition: transform .12s ease;
+  @media (max-width: 560px) { .card { width: min(84vw, 300px); } }
+  .card .art {
+    height: clamp(140px, 24vw, 190px);
+    display: flex; align-items: center; justify-content: center;
   }
-  #goBtn:active { transform: translate(-50%, -50%) scale(.92); }
-  #goBtn:hover { filter: brightness(1.08); }
-
-  .tips { margin-top: 16px; font-size: 13px; color: #d8b58a; letter-spacing: 1px; z-index: 2; }
-
-  /* ---------- 声音按钮 ---------- */
-  .sound-btn {
-    position: fixed; top: 14px; right: 14px; z-index: 20;
-    width: 42px; height: 42px; border-radius: 50%;
-    border: 1.5px solid rgba(255, 220, 150, .45);
-    background: rgba(60, 16, 12, .55); backdrop-filter: blur(4px);
-    color: #ffd54a; font-size: 19px; cursor: pointer; line-height: 1;
-  }
-  .sound-btn:hover { background: rgba(90, 28, 20, .7); }
-
-  /* ---------- 历史 ---------- */
-  .history { width: min(92vw, 640px); margin: 26px auto 10px; z-index: 2; }
-  .history h3 {
-    font-size: 14px; color: #e8bd85; letter-spacing: 2px; font-weight: 600;
-    display: flex; align-items: center; gap: 10px;
-  }
-  .history h3::before, .history h3::after {
-    content: ""; flex: 1; height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(232,189,133,.45), transparent);
-  }
-  .history .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 12px; min-height: 30px; }
-  .history .chip {
-    padding: 5px 13px; border-radius: 999px; font-size: 13px;
-    background: rgba(255, 220, 150, .1); border: 1px solid rgba(255, 220, 150, .28);
-    color: #ffe4b0; animation: pop .25s ease;
-  }
-  .history .chip:first-child { background: rgba(255, 213, 74, .22); border-color: rgba(255, 213, 74, .55); color: #ffe9b0; }
-  .history .empty { color: #a8875f; font-size: 13px; margin-top: 12px; text-align: center; }
-  @keyframes pop { from { transform: scale(.5); opacity: 0; } }
-
-  footer { margin: 26px 0 30px; font-size: 12px; color: #8f6f4e; letter-spacing: 1px; z-index: 2; text-align: center; line-height: 1.9; }
-
-  /* ---------- 结果弹窗 ---------- */
-  .modal-mask {
-    position: fixed; inset: 0; z-index: 50;
-    background: rgba(20, 6, 4, .66); backdrop-filter: blur(6px);
-    display: none; align-items: center; justify-content: center; padding: 18px;
-  }
-  .modal-mask.show { display: flex; animation: fadein .25s ease; }
-  @keyframes fadein { from { opacity: 0; } }
-  .modal {
-    width: min(94vw, 420px); border-radius: 22px; overflow: hidden;
-    background: linear-gradient(180deg, #fff8ea, #ffeed2);
-    color: #4a2412; text-align: center;
-    animation: zoomin .38s cubic-bezier(.2, 1.4, .4, 1);
-    box-shadow: 0 24px 70px rgba(0,0,0,.55);
-    position: relative;
-  }
-  @keyframes zoomin { from { transform: scale(.6); opacity: 0; } }
-  .modal .ribbon {
-    background: linear-gradient(180deg, #e4372e, #b81f26);
-    color: #ffe9b0; padding: 13px 10px;
-    font-size: 17px; letter-spacing: 6px; font-weight: 700;
-    font-family: "Kaiti SC", "STKaiti", "KaiTi", serif;
-  }
-  .modal .art { padding: 18px 12px 4px; }
-  .modal .art svg { width: min(72vw, 250px); height: auto; filter: drop-shadow(0 6px 10px rgba(90, 40, 10, .18)); }
-  .modal .dish {
-    font-size: 30px; font-weight: 800; color: #b81f26; margin-top: 8px; letter-spacing: 2px;
+  .card .art svg { width: min(34vw, 150px); height: auto; filter: drop-shadow(0 6px 12px rgba(0,0,0,.35)); }
+  .card.cook { background: linear-gradient(180deg, rgba(143, 212, 122, .09), rgba(143, 212, 122, .02)); border-color: rgba(143, 212, 122, .35); }
+  .card.cook:hover { border-color: rgba(143, 212, 122, .8); }
+  .card .label {
+    text-align: center; padding: 14px 12px 6px;
+    font-size: 25px; font-weight: 800; letter-spacing: 3px;
     font-family: "Kaiti SC", "STKaiti", "KaiTi", "PingFang SC", serif;
   }
-  .modal .brands { padding: 12px 18px 4px; }
-  .modal .brands .label { font-size: 12.5px; color: #9a6b3a; letter-spacing: 2px; margin-bottom: 9px; }
-  .modal .brand-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-  .brand-chip {
-    padding: 6px 14px; border-radius: 999px; font-size: 14px;
-    background: #fff; border: 1.5px solid #e8c48f; color: #7a4a1d; font-weight: 600;
+  .card.go-out .label { color: #ffd54a; }
+  .card.cook .label { color: #a9e29a; }
+  .card .desc {
+    text-align: center; padding: 0 16px 20px;
+    font-size: 13.5px; color: #d8b58a; line-height: 1.7;
   }
-  .brand-chip.pick {
-    background: linear-gradient(180deg, #ffd54a, #f0a92d); border-color: #d18a1f;
-    color: #5c3000; box-shadow: 0 3px 10px rgba(216, 138, 30, .4);
+  .card .desc b { color: #ffe4b0; font-weight: 600; }
+  .card .go {
+    margin: 0 auto 18px; padding: 9px 26px; border-radius: 999px;
+    font-size: 14px; letter-spacing: 2px; font-weight: 700;
   }
-  .brand-chip.pick::before { content: "今日去吃 "; font-size: 11px; font-weight: 400; opacity: .75; }
-  .modal .acts { display: flex; gap: 12px; padding: 20px 22px 24px; }
-  .modal .acts button {
-    flex: 1; padding: 13px 0; border-radius: 999px; font-size: 16px; font-weight: 700;
-    cursor: pointer; letter-spacing: 3px; transition: transform .12s ease, filter .12s ease;
-    border: none;
-  }
-  .modal .acts button:hover { transform: translateY(-2px); filter: brightness(1.05); }
-  .btn-again { background: #fff; color: #b81f26; border: 2px solid #e4372e !important; }
-  .btn-ok { background: linear-gradient(180deg, #e4372e, #b81f26); color: #ffe9b0; }
+  .card.go-out .go { background: linear-gradient(180deg, #e4372e, #b81f26); color: #ffe9b0; }
+  .card.cook .go { background: linear-gradient(180deg, #4f9e3d, #2f6e24); color: #eafff0; }
 
-  /* ---------- 彩带 ---------- */
-  #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 60; }
+  footer { margin: 30px 0 34px; font-size: 12px; color: #8f6f4e; letter-spacing: 1px; text-align: center; z-index: 2; }
 </style>
 </head>
 <body>
 
 <div class="lantern l1"><div class="string"></div><div class="body"></div><div class="tassel"></div></div>
 <div class="lantern l2"><div class="string"></div><div class="body"></div><div class="tassel"></div></div>
-<button class="sound-btn" id="soundBtn" title="声音开关">🔔</button>
 
 <header>
-  <h1>今日吃啥 · 美食大转盘</h1>
-  <div class="sub"><b>40</b> 道正经饭菜 · 一键开转 · 选择困难症终结者</div>
+  <h1>今日吃啥？</h1>
+  <div class="sub">先定大方向 —— 在家开火，还是出门觅食？</div>
 </header>
 
-<div class="wheel-zone">
-  <div class="wheel-wrap">
-    <div class="pointer"></div>
-    <canvas id="wheel"></canvas>
-    <button id="goBtn">开吃</button>
-  </div>
-</div>
-<div class="tips">点转盘、按中间「开吃」或敲空格键即可开转</div>
-
-<div class="history">
-  <h3>最近吃过</h3>
-  <div class="chips" id="histChips"></div>
-  <div class="empty" id="histEmpty">还没有记录，转一次试试手气～</div>
-</div>
-
-<footer>纯前端页面 · 无需联网加载任何资源 · 每次结果完全随机</footer>
-
-<!-- 结果弹窗 -->
-<div class="modal-mask" id="modalMask">
-  <div class="modal">
-    <div class="ribbon">✦ 今 日 份 好 饭 ✦</div>
-    <div class="art" id="modalArt"></div>
-    <div class="dish" id="modalDish"></div>
-    <div class="brands">
-      <div class="label">市 面 常 见 品 牌</div>
-      <div class="brand-row" id="brandRow"></div>
+<div class="cards">
+  <a class="card go-out" href="eat-out/index.html">
+    <div class="art">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 160">
+        <ellipse cx="110" cy="138" rx="80" ry="9" fill="rgba(60,25,5,.3)"/>
+        <path d="M30 78 Q30 140 110 140 Q190 140 190 78 Z" fill="#e8e2d5"/>
+        <path d="M46 92 Q52 126 110 128 Q168 126 174 92 Q140 104 110 104 Q80 104 46 92Z" fill="rgba(0,0,0,.08)"/>
+        <ellipse cx="110" cy="78" rx="80" ry="17" fill="#f7f3ea"/>
+        <ellipse cx="110" cy="78" rx="69" ry="13" fill="#d44a25"/>
+        <path d="M58 77 q9 -8 18 0 t18 0 t18 0 t18 0 t18 0" stroke="#f2d98b" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+        <path d="M52 72 q9 -8 18 0 t18 0 t18 0 t18 0 t18 0" stroke="#f2d98b" stroke-width="3.2" fill="none" stroke-linecap="round" opacity=".85"/>
+        <path d="M62 83 q9 -8 18 0 t18 0 t18 0 t18 0" stroke="#f2d98b" stroke-width="3.2" fill="none" stroke-linecap="round" opacity=".7"/>
+        <rect x="88" y="30" width="5" height="36" rx="2.5" fill="#d9b98c" transform="rotate(-14 90 48)"/>
+        <rect x="124" y="26" width="5" height="40" rx="2.5" fill="#d9b98c" transform="rotate(11 126 46)"/>
+        <rect x="80" y="34" width="24" height="13" rx="6" fill="#b5651d"/>
+        <rect x="118" y="30" width="24" height="13" rx="6" fill="#c06a2a"/>
+        <ellipse cx="146" cy="72" rx="7" ry="4" fill="#e53935" opacity=".9"/>
+        <circle cx="94" cy="74" r="3.4" fill="#5da24a"/><circle cx="94" cy="74" r="1.4" fill="#8fd47a"/>
+        <path d="M104 20 q7 -9 0 -18 M132 26 q-7 -10 0 -20 M162 32 q7 -9 0 -18" stroke="rgba(255,220,180,.35)" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+      </svg>
     </div>
-    <div class="acts">
-      <button class="btn-again" id="btnAgain">再转一次</button>
-      <button class="btn-ok" id="btnOk">就吃这个！</button>
+    <div class="label">出去吃 🍜</div>
+    <div class="desc"><b>42</b> 道市面美食大转盘<br/>拉面火锅烤鱼小笼包…附常见品牌推荐</div>
+    <div class="go">开 转</div>
+  </a>
+
+  <a class="card cook" href="cook-home/index.html">
+    <div class="art">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 160">
+        <ellipse cx="110" cy="142" rx="78" ry="9" fill="rgba(60,25,5,.3)"/>
+        <path d="M26 96 Q26 60 110 60 Q194 60 194 96 Q110 110 26 96Z" fill="#fffaf0"/>
+        <path d="M34 96 Q34 122 110 122 Q186 122 186 96 Q110 108 34 96Z" fill="#f0e4c8"/>
+        <ellipse cx="78" cy="86" rx="16" ry="7" fill="#f7dda3"/>
+        <path d="M62 86 q16 -10 32 0" stroke="#e8bf6a" stroke-width="3" fill="none"/>
+        <path d="M78 79 a7 7 0 0 1 0 14 a7 7 0 0 1 0 -14Z" fill="#fffaf0"/>
+        <ellipse cx="132" cy="88" rx="18" ry="8" fill="#f7dda3"/>
+        <circle cx="126" cy="87" r="6.4" fill="#e0762e"/><circle cx="142" cy="90" r="5.4" fill="#8db860"/>
+        <circle cx="134" cy="81" r="3.4" fill="#5da24a"/>
+        <rect x="152" y="94" width="24" height="11" rx="5.5" fill="#fdf3dd"/>
+        <path d="M100 50 q7 -9 0 -18 M122 44 q-7 -10 0 -20 M144 52 q7 -9 0 -18" stroke="rgba(255,220,180,.35)" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+        <path d="M40 44 l0 -26 6 8 6 -8 0 26 Z" fill="#c94a3a"/>
+        <path d="M46 26 l0 -8" stroke="#8a3020" stroke-width="2"/>
+        <path d="M170 40 l0 -22 5 7 5 -7 0 22 Z" fill="#e09b2d"/>
+        <path d="M175 25 l0 -7" stroke="#a8641a" stroke-width="2"/>
+      </svg>
     </div>
-  </div>
+    <div class="label">在家做 🥘</div>
+    <div class="desc"><b>42</b> 道家常菜大转盘<br/>番茄炒蛋红烧肉…附食材清单和营养价值</div>
+    <div class="go">开 转</div>
+  </a>
 </div>
 
-<canvas id="confetti"></canvas>
+<footer>两个转盘 · 随时可回本页重新选择 · 纯前端页面无外部依赖</footer>
 
-<script>
-"use strict";
-/* ==================== 食物插画（纯 SVG 手绘，无外部图片） ==================== */
-const SVG_NS = 'xmlns="http://www.w3.org/2000/svg"';
-const wrap = inner => `<svg ${SVG_NS} viewBox="0 0 220 160">${inner}</svg>`;
-const shadow = (cx=110, cy=142, rx=80) => `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="9" fill="rgba(60,25,5,.16)"/>`;
-const steam = (x=110) => `
-  <path d="M${x-30} 34 q7 -9 0 -18" stroke="rgba(120,70,30,.28)" stroke-width="3.4" fill="none" stroke-linecap="round"/>
-  <path d="M${x} 28 q-7 -10 0 -20" stroke="rgba(120,70,30,.28)" stroke-width="3.4" fill="none" stroke-linecap="round"/>
-  <path d="M${x+30} 34 q7 -9 0 -18" stroke="rgba(120,70,30,.28)" stroke-width="3.4" fill="none" stroke-linecap="round"/>`;
-
-/* 汤面 / 米粉 / 馄饨 / 冒菜 通用汤碗 */
-function soupBowl(o) {
-  const { bowl='#e8e2d5', bowl2='#f7f3ea', broth='#c8481f', noodle='#f2d98b',
-          noodleW=3.2, tops='' } = o;
-  return wrap(shadow() + steam() + `
-    <path d="M30 78 Q30 140 110 140 Q190 140 190 78 Z" fill="${bowl}"/>
-    <path d="M46 92 Q52 126 110 128 Q168 126 174 92 Q140 104 110 104 Q80 104 46 92Z" fill="rgba(0,0,0,.08)"/>
-    <ellipse cx="110" cy="78" rx="80" ry="17" fill="${bowl2}"/>
-    <ellipse cx="110" cy="78" rx="69" ry="13" fill="${broth}"/>
-    <path d="M58 77 q9 -8 18 0 t18 0 t18 0 t18 0 t18 0" stroke="${noodle}" stroke-width="${noodleW}" fill="none" stroke-linecap="round"/>
-    <path d="M52 72 q9 -8 18 0 t18 0 t18 0 t18 0 t18 0" stroke="${noodle}" stroke-width="${noodleW}" fill="none" stroke-linecap="round" opacity=".85"/>
-    <path d="M62 83 q9 -8 18 0 t18 0 t18 0 t18 0" stroke="${noodle}" stroke-width="${noodleW}" fill="none" stroke-linecap="round" opacity=".7"/>
-    ${tops}
-    <ellipse cx="110" cy="78" rx="69" ry="13" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="2"/>`);
-}
-const scallion = (x,y) => `<circle cx="${x}" cy="${y}" r="3.4" fill="#5da24a"/><circle cx="${x}" cy="${y}" r="1.4" fill="#8fd47a"/>`;
-const chiliOil = (x,y) => `<ellipse cx="${x}" cy="${y}" rx="6" ry="3.6" fill="#e53935" opacity=".9"/><circle cx="${x+3}" cy="${y-2}" r="1.6" fill="#ff8a65"/>`;
-const beefSlice = (x,y,r=0) => `<g transform="rotate(${r} ${x} ${y})"><rect x="${x-11}" y="${y-7}" width="22" height="14" rx="6" fill="#a5583a"/><rect x="${x-8}" y="${y-5}" width="16" height="5" rx="2.5" fill="#c47a52"/></g>`;
-const eggHalf = (x,y) => `<circle cx="${x}" cy="${y}" r="10" fill="#fffdf5"/><path d="M${x-10} ${y} a10 10 0 0 0 20 0Z" fill="#ffc445"/><circle cx="${x}" cy="${y+3}" r="3.4" fill="#ff9d2e"/>`;
-const tofuPuff = (x,y) => `<rect x="${x-8}" y="${y-6}" width="16" height="12" rx="3.5" fill="#e2a23c"/><rect x="${x-5}" y="${y-3.4}" width="10" height="4" rx="2" fill="#f4c96b"/>`;
-const greensDrop = (x,y) => `<path d="M${x} ${y} q-7 -6 -3 -12 q6 2 3 12Z" fill="#4f9e3d"/><path d="M${x} ${y} q7 -6 3 -12 q-6 2 -3 12Z" fill="#61b84c"/>`;
-const wontonPouch = (x,y) => `<path d="M${x-11} ${y} q4 -12 11 -3 q7 -9 11 3 q-5 9 -11 9 q-6 0 -11 -9Z" fill="#fbeed6" stroke="#e3cba1" stroke-width="1.5"/>`;
-const fishSlice = (x,y,r=0) => `<g transform="rotate(${r} ${x} ${y})"><rect x="${x-12}" y="${y-6}" width="24" height="12" rx="6" fill="#f4e3d0"/><path d="M${x-9} ${y-3} h18" stroke="#e8b98f" stroke-width="2.4" stroke-linecap="round"/></g>`;
-
-/* 盖浇饭 / 拌饭 通用饭碗 */
-function riceBowl(o) {
-  const { bowl='#d75a33', bowl2='#e8754e', riceTop='#fff6e8', tops='' } = o;
-  return wrap(shadow() + `
-    <path d="M30 84 Q30 140 110 140 Q190 140 190 84 Z" fill="${bowl}"/>
-    <path d="M46 96 Q54 128 110 130 Q166 128 174 96 Q140 108 110 108 Q80 108 46 96Z" fill="rgba(0,0,0,.1)"/>
-    <ellipse cx="110" cy="84" rx="80" ry="17" fill="${bowl2}"/>
-    <path d="M45 84 Q68 46 110 46 Q152 46 175 84 Q110 96 45 84Z" fill="${riceTop}"/>
-    <path d="M70 62 q12 -7 24 -1 M112 52 q12 -4 22 4 M88 74 q12 -5 24 -1 M126 72 q10 -3 18 4" stroke="#efe0c8" stroke-width="2.2" fill="none" stroke-linecap="round"/>
-    ${tops}
-    <ellipse cx="110" cy="84" rx="80" ry="17" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="2"/>`);
-}
-const meatLump = (x,y,c='#a05a2c',c2='#c07b45',r=8) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}"/><circle cx="${x-2}" cy="${y-2}" r="${r*0.45}" fill="${c2}"/>`;
-const pepperBit = (x,y,c='#3f9e3f') => `<rect x="${x-6}" y="${y-2.4}" width="12" height="4.8" rx="2.4" fill="${c}"/>`;
-
-/* 铜锅涮肉 */
-function copperPot() {
-  return wrap(shadow() + `
-    <rect x="104" y="26" width="12" height="34" rx="5" fill="#e0992d"/>
-    <circle cx="110" cy="24" r="9" fill="#f2b93e"/><circle cx="110" cy="24" r="4" fill="#c97f1d"/>
-    <path d="M34 76 Q30 132 110 138 Q190 132 186 76 Q150 90 110 90 Q70 90 34 76Z" fill="#d98324"/>
-    <path d="M34 76 Q70 90 110 90 Q150 90 186 76 L182 62 Q110 76 38 62 Z" fill="#eda43b"/>
-    <ellipse cx="110" cy="62" rx="72" ry="15" fill="#f6c453"/>
-    <ellipse cx="110" cy="62" rx="52" ry="10" fill="#e9dfc8"/>
-    <ellipse cx="110" cy="62" rx="52" ry="10" fill="none" stroke="#c9a86b" stroke-width="2"/>
-    <path d="M48 84 Q110 100 172 84" stroke="#b96f1d" stroke-width="3" fill="none" opacity=".5"/>
-    ${greensDrop(80,62)}${beefSlice(122,58,-14)}${scallion(140,66)}${greensDrop(102,58)}
-    <path d="M52 110 h-14 M168 110 h14" stroke="#eda43b" stroke-width="5" stroke-linecap="round"/>`);
-}
-
-/* 火锅（可鸳鸯） */
-function hotPot(split) {
-  const soup2 = split ? `<path d="M110 30.5 a62 11.5 0 0 1 0 23Z" fill="#f3e6c8"/><path d="M110 31 q7 11 0 23" stroke="#e8d8b5" stroke-width="2" fill="none"/>` : '';
-  return wrap(shadow() + steam() + `
-    <rect x="36" y="88" width="148" height="10" rx="5" fill="#3a3a42"/>
-    <path d="M32 54 Q32 102 110 104 Q188 102 188 54 Q160 68 110 68 Q60 68 32 54Z" fill="#46464f"/>
-    <path d="M32 54 Q60 68 110 68 Q160 68 188 54 L184 42 Q110 56 36 42 Z" fill="#55555f"/>
-    <ellipse cx="110" cy="42" rx="74" ry="15" fill="#6a6a75"/>
-    <ellipse cx="110" cy="42" rx="62" ry="11.5" fill="#c8481f"/>
-    ${soup2}
-    <ellipse cx="110" cy="42" rx="62" ry="11.5" fill="none" stroke="#e8902e" stroke-width="2.4"/>
-    ${meatLump(78,40,'#b5654a','#d4836a',6.5)}${meatLump(140,44,'#8db860','#a8d17a',6.5)}
-    ${greensDrop(94,46)}${tofuPuff(126,38)}${scallion(110,40)}${chiliOil(90,34)}
-    <path d="M28 58 q-8 6 0 12 M192 58 q8 6 0 12" stroke="#6a6a75" stroke-width="5" fill="none" stroke-linecap="round"/>`);
-}
-
-/* 麻辣香锅 / 炒菜 盛盘 */
-function pilePlate(o) {
-  const { plate='#3c4048', plate2='#4c525c', tops='' } = o;
-  return wrap(shadow() + steam() + `
-    <ellipse cx="110" cy="106" rx="84" ry="26" fill="${plate}"/>
-    <ellipse cx="110" cy="102" rx="84" ry="26" fill="${plate2}"/>
-    <ellipse cx="110" cy="102" rx="70" ry="20" fill="#31343b"/>
-    <path d="M55 100 Q70 62 110 60 Q150 62 165 100 Q110 112 55 100Z" fill="#8a4a26"/>
-    ${tops}
-    <ellipse cx="110" cy="102" rx="70" ry="20" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="2"/>`);
-}
-
-/* 串串烧烤 */
-function skewers() {
-  const one = (x, rot, c1, c2) => `
-    <g transform="rotate(${rot} ${x} 90)">
-      <rect x="${x-2.5}" y="26" width="5" height="104" rx="2.5" fill="#d9b98c"/>
-      <rect x="${x-11}" y="38" width="22" height="15" rx="6" fill="${c1}"/>
-      <rect x="${x-11}" y="58" width="22" height="15" rx="6" fill="${c2}"/>
-      <rect x="${x-11}" y="78" width="22" height="15" rx="6" fill="${c1}"/>
-      <circle cx="${x-4}" cy="43" r="1.6" fill="rgba(255,255,255,.4)"/>
-      <circle cx="${x+5}" cy="64" r="1.6" fill="rgba(255,255,255,.35)"/>
-      <circle cx="${x-2}" cy="83" r="1.6" fill="rgba(255,255,255,.4)"/>
-    </g>`;
-  return wrap(shadow(110,146,86) + steam() +
-    one(72, -9, '#b5651d', '#d07f34') + one(112, 3, '#c06a2a', '#96521b') + one(152, 10, '#b5651d', '#d07f34') +
-    `<circle cx="88" cy="52" r="2" fill="#e53935"/><circle cx="126" cy="46" r="2" fill="#e53935"/><circle cx="146" cy="60" r="2" fill="#43a047"/><circle cx="70" cy="66" r="2" fill="#43a047"/>`);
-}
-
-/* 铁板烤肉 */
-function grillMeat() {
-  return wrap(shadow() + steam() + `
-    <ellipse cx="110" cy="102" rx="84" ry="26" fill="#2f3238"/>
-    <ellipse cx="110" cy="98" rx="84" ry="26" fill="#3d4149"/>
-    <path d="M40 96 h140 M52 108 h116" stroke="#22252b" stroke-width="5" stroke-linecap="round"/>
-    <rect x="58" y="66" width="46" height="26" rx="10" fill="#b5651d" transform="rotate(-8 81 79)"/>
-    <rect x="58" y="66" width="46" height="26" rx="10" fill="none" stroke="#8a4a12" stroke-width="2" transform="rotate(-8 81 79)"/>
-    <rect x="112" y="70" width="46" height="26" rx="10" fill="#c06a2a" transform="rotate(7 135 83)"/>
-    <rect x="112" y="70" width="46" height="26" rx="10" fill="none" stroke="#8a4a12" stroke-width="2" transform="rotate(7 135 83)"/>
-    <path d="M74 62 q10 -12 22 -4 M128 64 q12 -10 22 -2" stroke="#5a2d0e" stroke-width="2.4" fill="none"/>
-    <path d="M52 84 q-6 -14 6 -22 q4 12 -6 22Z" fill="#4f9e3d"/>
-    <path d="M168 90 q8 -12 -2 -20 q-6 10 2 20Z" fill="#61b84c"/>
-    ${chiliOil(96,88)}${scallion(130,90)}${scallion(76,96)}`);
-}
-
-/* 烤鱼 */
-function roastFish() {
-  return wrap(shadow() + `
-    <ellipse cx="110" cy="108" rx="86" ry="24" fill="#8c2f22"/>
-    <ellipse cx="110" cy="104" rx="86" ry="24" fill="#b0402f"/>
-    <ellipse cx="110" cy="104" rx="72" ry="18" fill="#8c2f22"/>
-    <path d="M34 104 Q110 74 186 104 Q110 120 34 104Z" fill="#d98c3f"/>
-    <path d="M50 104 Q110 84 172 104 Q110 114 50 104Z" fill="#eab264"/>
-    <path d="M158 92 l24 -14 -6 20 14 -2 -22 16Z" fill="#d98c3f"/>
-    <circle cx="78" cy="100" r="3.4" fill="#5c2a12"/>
-    <path d="M62 98 q10 -4 20 0 M96 92 q10 -4 20 0 M130 98 q10 -4 20 0" stroke="#8a521e" stroke-width="2.4" fill="none" stroke-linecap="round"/>
-    ${chiliOil(70,90)}${chiliOil(120,88)}${chiliOil(150,94)}${scallion(92,96)}${scallion(136,100)}
-    <path d="M56 96 l10 -6 M104 90 l10 -6 M148 94 l10 -6" stroke="rgba(60,20,5,.4)" stroke-width="2.4"/>`);
-}
-
-/* 北京烤鸭 */
-function roastDuck() {
-  let slices = '';
-  for (let i = 0; i < 6; i++) {
-    const a = -58 + i * 23, r = 52;
-    const x = 96 + Math.cos(a * Math.PI / 180) * r, y = 96 + Math.sin(a * Math.PI / 180) * r;
-    slices += `<g transform="rotate(${a + 90} ${x} ${y})">
-      <rect x="${x - 7}" y="${y - 16}" width="14" height="32" rx="6" fill="#c07b45"/>
-      <rect x="${x - 7}" y="${y - 16}" width="14" height="9" rx="4.5" fill="#8a4a21"/>
-    </g>`;
-  }
-  return wrap(shadow() + `
-    <ellipse cx="110" cy="112" rx="88" ry="24" fill="#f2ead8"/>
-    <ellipse cx="110" cy="108" rx="88" ry="24" fill="#fdf7ea"/>
-    <ellipse cx="110" cy="108" rx="72" ry="17" fill="#f0e6cf"/>
-    ${slices}
-    <rect x="160" y="76" width="9" height="34" rx="4.5" fill="#4f9e3d" transform="rotate(14 164 93)"/>
-    <rect x="174" y="82" width="9" height="30" rx="4.5" fill="#61b84c" transform="rotate(24 178 97)"/>
-    <circle cx="52" cy="104" r="14" fill="#fdf7ea" stroke="#e3d5b8" stroke-width="2"/>
-    <path d="M42 106 q10 -8 20 0" stroke="#8a5a2a" stroke-width="3" fill="none"/>`);
-}
-
-/* 汉堡 */
-function burger() {
-  return wrap(shadow(110,138,72) + `
-    <path d="M46 64 Q46 26 110 26 Q174 26 174 64 Z" fill="#eda43b"/>
-    <circle cx="80" cy="42" r="2.6" fill="#fff2d8"/><circle cx="110" cy="36" r="2.6" fill="#fff2d8"/>
-    <circle cx="140" cy="42" r="2.6" fill="#fff2d8"/><circle cx="95" cy="52" r="2.6" fill="#fff2d8"/><circle cx="126" cy="52" r="2.6" fill="#fff2d8"/>
-    <path d="M40 66 q10 12 20 0 t20 0 t20 0 t20 0 t20 0 t20 0 q8 10 18 0 l0 -2 h-138Z" fill="#6fbf4a"/>
-    <rect x="42" y="76" width="136" height="12" rx="6" fill="#ffcf4d"/>
-    <rect x="42" y="86" width="136" height="18" rx="9" fill="#8a5230"/>
-    <rect x="50" y="91" width="60" height="5" rx="2.5" fill="#a5694a"/>
-    <path d="M40 104 h140 v16 a12 12 0 0 1 -12 12 h-116 a12 12 0 0 1 -12 -12Z" fill="#e0992d"/>`);
-}
-
-/* 披萨 */
-function pizza() {
-  let pep = '';
-  [[82,72],[136,64],[110,96],[70,100],[150,98],[112,50]].forEach(([x,y]) => {
-    pep += `<circle cx="${x}" cy="${y}" r="8.4" fill="#d7402e"/><circle cx="${x-2}" cy="${y-2}" r="3.4" fill="#ef6a52"/>`;
-  });
-  return wrap(shadow() + `
-    <circle cx="110" cy="88" r="74" fill="#e8b04b"/>
-    <circle cx="110" cy="88" r="64" fill="#f6c453"/>
-    <circle cx="110" cy="88" r="64" fill="none" stroke="#fff0c2" stroke-width="4" stroke-dasharray="2 9" stroke-linecap="round"/>
-    ${pep}
-    <path d="M110 24 v128 M46 88 h128 M65 43 l90 90 M155 43 l-90 90" stroke="#d9992e" stroke-width="3"/>`);
-}
-
-/* 炸鸡 */
-function friedChicken() {
-  const leg = (x, y, rot) => `
-    <g transform="rotate(${rot} ${x} ${y})">
-      <circle cx="${x}" cy="${y}" r="26" fill="#d9932b"/>
-      <circle cx="${x - 7}" cy="${y - 7}" r="9" fill="#eab54a"/>
-      <circle cx="${x + 8}" cy="${y + 4}" r="3" fill="#b5731c"/>
-      <rect x="${x + 18}" y="${y - 5}" width="26" height="10" rx="5" fill="#f7ecd7"/>
-      <circle cx="${x + 46}" cy="${y}" r="7" fill="#fff8ea"/>
-      <circle cx="${x + 46}" cy="${y - 5}" r="3.4" fill="#fff8ea"/>
-      <circle cx="${x + 46}" cy="${y + 5}" r="3.4" fill="#fff8ea"/>
-    </g>`;
-  return wrap(shadow(110,140,84) + leg(72, 92, 24) + leg(146, 90, -18) + `
-    <circle cx="108" cy="118" r="12" fill="#d9932b"/><circle cx="104" cy="114" r="4" fill="#eab54a"/>`);
-}
-
-/* 寿司 */
-function sushi() {
-  return wrap(shadow(110,138,80) + `
-    <rect x="24" y="96" width="172" height="14" rx="7" fill="#1d1d22"/>
-    <g transform="rotate(-6 66 84)">
-      <rect x="40" y="72" width="52" height="22" rx="11" fill="#fdf8ec"/>
-      <path d="M42 76 q8 -12 34 -12 l12 0 l0 14 q-24 8 -46 0Z" fill="#f4875a"/>
-      <path d="M46 84 q10 -4 20 0" stroke="#e8d9bd" stroke-width="2" fill="none"/>
-    </g>
-    <g transform="rotate(5 130 82)">
-      <rect x="104" y="70" width="52" height="22" rx="11" fill="#fdf8ec"/>
-      <path d="M106 74 q10 -12 34 -12 l12 0 l0 12 q-24 8 -46 0Z" fill="#f4b8c2"/>
-      <path d="M112 80 q10 -3 18 0" stroke="#e8d9bd" stroke-width="2" fill="none"/>
-    </g>
-    <circle cx="110" cy="44" r="21" fill="#2b2b31"/>
-    <circle cx="110" cy="44" r="16.4" fill="#fdf8ec"/>
-    <circle cx="110" cy="44" r="7.4" fill="#f4875a"/>
-    <circle cx="110" cy="44" r="21" fill="none" stroke="#17171b" stroke-width="2.4"/>`);
-}
-
-/* 水饺 / 小笼包 / 生煎 / 包子 */
-function dumplings(kind) {
-  if (kind === 'jiaozi') {
-    const one = (x, y, rot) => `
-      <g transform="rotate(${rot} ${x} ${y})">
-        <path d="M${x - 26} ${y + 10} q26 14 52 0 q-4 -26 -26 -26 q-22 0 -26 26Z" fill="#fbeed6" stroke="#e3cba1" stroke-width="2"/>
-        <path d="M${x - 20} ${y - 12} q4 -5 8 0 M${x - 8} ${y - 15} q4 -5 8 0 M${x + 4} ${y - 15} q4 -5 8 0 M${x + 14} ${y - 11} q4 -5 8 0" stroke="#e3cba1" stroke-width="2" fill="none"/>
-      </g>`;
-    return wrap(shadow(110,140,84) + one(70, 84, -10) + one(148, 82, 8) + one(108, 118, 0) + scallion(100, 40) + chiliOil(130, 44));
-  }
-  if (kind === 'xiaolongbao') {
-    const one = (x, y) => `
-      <ellipse cx="${x}" cy="${y + 6}" rx="26" ry="9" fill="#ecd9b4"/>
-      <circle cx="${x}" cy="${y}" r="24" fill="#fbeed6"/>
-      <path d="M${x - 18} ${y - 10} q6 -8 12 -2 M${x - 6} ${y - 14} q6 -8 12 -2 M${x + 6} ${y - 14} q6 -8 12 -2" stroke="#e3cba1" stroke-width="2" fill="none"/>
-      <path d="M${x - 14} ${y + 8} q14 6 28 0" stroke="#ecd9b4" stroke-width="3" fill="none"/>`;
-    return wrap(shadow(110,140,84) + steam() + one(74, 78) + one(146, 78) + one(110, 114) +
-      `<path d="M60 116 h100" stroke="#e8d8b8" stroke-width="8" stroke-linecap="round"/><path d="M60 116 h100" stroke="#d8c49c" stroke-width="2"/>`);
-  }
-  if (kind === 'shengjian') {
-    const one = (x, y) => `
-      <circle cx="${x}" cy="${y}" r="24" fill="#e8b45c"/>
-      <path d="M${x - 22} ${y - 6} a22 20 0 0 1 44 0 q-6 8 -22 8 q-16 0 -22 -8Z" fill="#f4cd7e"/>
-      <circle cx="${x - 8}" cy="${y - 10}" r="1.8" fill="#fff6dc"/><circle cx="${x + 6}" cy="${y - 12}" r="1.8" fill="#fff6dc"/><circle cx="${x + 14}" cy="${y - 6}" r="1.8" fill="#fff6dc"/>
-      ${scallion(x, y - 2)}`;
-    return wrap(shadow(110,140,84) + one(76, 76) + one(146, 76) + one(110, 116) + chiliOil(96, 44) + scallion(130, 46));
-  }
-  const one = (x, y) => `
-    <ellipse cx="${x}" cy="${y + 10}" rx="26" ry="8" fill="#e0c9a0"/>
-    <circle cx="${x}" cy="${y}" r="25" fill="#fdf3dd"/>
-    <path d="M${x - 16} ${y - 14} q8 -10 16 0 q8 -10 16 0" stroke="#e6cfa4" stroke-width="3.4" fill="none" stroke-linecap="round"/>`;
-  return wrap(shadow(110,140,84) + steam() + one(72, 78) + one(148, 78) + one(110, 116));
-}
-
-/* 肉夹馍 */
-function roujiamo() {
-  return wrap(shadow(110,140,80) + `
-    <ellipse cx="110" cy="92" rx="62" ry="34" fill="#e8b96f"/>
-    <ellipse cx="110" cy="86" rx="62" ry="32" fill="#f2cd85"/>
-    <path d="M64 74 q10 -18 46 -18 q36 0 46 18 q-46 12 -92 0Z" fill="#f7dda3"/>
-    <path d="M58 92 q52 16 104 0 l0 10 q-52 14 -104 0Z" fill="#f2cd85"/>
-    ${meatLump(86, 88, '#7b3f1e', '#96522a', 11)}${meatLump(112, 92, '#6d3618', '#8a4a21', 12)}${meatLump(136, 88, '#7b3f1e', '#96522a', 10)}
-    ${pepperBit(96, 82)}${pepperBit(124, 96)}
-    <path d="M84 52 q26 -10 52 0" stroke="#d9a458" stroke-width="3" fill="none"/>`);
-}
-
-/* 煎饼果子 */
-function jianbing() {
-  return wrap(shadow(110,140,80) + `
-    <g transform="rotate(-18 110 84)">
-      <rect x="52" y="52" width="112" height="66" rx="26" fill="#f2d48f"/>
-      <rect x="60" y="58" width="96" height="26" rx="13" fill="#e8bf6a"/>
-      <circle cx="94" cy="72" r="14" fill="#fdf3dd"/><circle cx="94" cy="72" r="6.5" fill="#f6b93b"/>
-      <rect x="120" y="60" width="26" height="26" rx="5" fill="#f7e3b0" transform="rotate(12 133 73)"/>
-      <path d="M56 96 q56 14 108 0" stroke="#c8862e" stroke-width="5" fill="none" opacity=".6"/>
-      <rect x="66" y="98" width="88" height="12" rx="6" fill="#e8bf6a"/>
-      ${scallion(112, 88)}${scallion(136, 90)}${scallion(88, 90)}
-      <path d="M150 60 q8 24 0 50" stroke="#d9a458" stroke-width="4" fill="none"/>
-    </g>`);
-}
-
-/* 皮蛋瘦肉粥 */
-function porridge() {
-  return wrap(shadow() + steam() + `
-    <path d="M38 76 Q38 132 110 132 Q182 132 182 76 Z" fill="#f0e6d2"/>
-    <path d="M52 90 Q60 118 110 120 Q160 118 168 90 Q140 100 110 100 Q80 100 52 90Z" fill="rgba(0,0,0,.06)"/>
-    <ellipse cx="110" cy="76" rx="72" ry="15" fill="#fdf8ec"/>
-    <ellipse cx="110" cy="76" rx="72" ry="15" fill="none" stroke="#e3d5b8" stroke-width="2"/>
-    <ellipse cx="92" cy="74" rx="9" ry="6" fill="#4a4a58"/><circle cx="90" cy="73" r="2" fill="#6a6a7d"/>
-    <ellipse cx="126" cy="78" rx="8" ry="5.4" fill="#5c5c6e"/><circle cx="124" cy="77" r="1.8" fill="#7c7c90"/>
-    ${meatLump(110, 70, '#c9895a', '#e0a878', 6)}
-    ${scallion(100, 82)}${scallion(140, 72)}
-    <g transform="rotate(18 176 60)">
-      <rect x="170" y="30" width="10" height="60" rx="5" fill="#f0c96b"/>
-      <rect x="170" y="36" width="10" height="6" rx="3" fill="#e0b052"/>
-      <rect x="170" y="52" width="10" height="6" rx="3" fill="#e0b052"/>
-    </g>`);
-}
-
-/* 干拌面（热干面） */
-function dryNoodles() {
-  return wrap(shadow() + `
-    <ellipse cx="110" cy="98" rx="86" ry="30" fill="#d8d2c4"/>
-    <ellipse cx="110" cy="94" rx="86" ry="30" fill="#f0ebe0"/>
-    <ellipse cx="110" cy="94" rx="70" ry="22" fill="#e8e0d0"/>
-    <path d="M46 88 q10 -7 20 0 t20 0 t20 0 t20 0 t20 0 M50 96 q10 -7 20 0 t20 0 t20 0 t20 0 t20 0 M58 104 q10 -7 20 0 t20 0 t20 0 t20 0" stroke="#f4d06f" stroke-width="4.4" fill="none" stroke-linecap="round"/>
-    <path d="M64 92 q10 -7 20 0 t20 0 t20 0 t20 0 M72 100 q10 -7 20 0 t20 0 t20 0" stroke="#eec25a" stroke-width="4.4" fill="none" stroke-linecap="round"/>
-    <path d="M52 82 Q110 66 168 82 Q110 92 52 82Z" fill="rgba(198,120,40,.32)"/>
-    ${scallion(88, 80)}${scallion(120, 82)}${scallion(104, 88)}
-    <circle cx="82" cy="86" r="2" fill="#8a6a30"/><circle cx="134" cy="84" r="2" fill="#8a6a30"/><circle cx="112" cy="78" r="2" fill="#8a6a30"/>
-    ${pepperBit(96, 92, '#3f9e3f')}
-    <path d="M76 68 q18 -6 34 2" stroke="#c86a1e" stroke-width="4" fill="none" opacity=".55" stroke-linecap="round"/>`);
-}
-
-/* 石锅拌饭 */
-function stoneBowl() {
-  return wrap(shadow() + steam() + `
-    <path d="M40 78 Q40 132 110 134 Q180 132 180 78 Z" fill="#3a3d42"/>
-    <path d="M52 92 Q60 122 110 124 Q160 122 168 92 Q140 104 110 104 Q80 104 52 92Z" fill="rgba(0,0,0,.14)"/>
-    <ellipse cx="110" cy="78" rx="70" ry="15" fill="#52565e"/>
-    <ellipse cx="110" cy="78" rx="62" ry="12" fill="#f5ecd8"/>
-    <path d="M58 80 q14 -16 30 -2 q10 -18 26 -4 q14 -12 26 2 q8 -10 18 2 q-40 14 -100 2Z" fill="#fdf6e8"/>
-    ${pepperBit(84, 70)}${pepperBit(120, 74, '#d84a3a')}${meatLump(140, 72, '#8a5230', '#a5694a', 6)}
-    ${greensDrop(70, 76)}${scallion(96, 78)}
-    <circle cx="110" cy="70" r="9" fill="#ffc445"/><circle cx="110" cy="70" r="4.4" fill="#ff9d2e"/>`);
-}
-
-/* 快餐分格餐盘 */
-function mealTray() {
-  return wrap(shadow(110, 100, 88) + `
-    <rect x="24" y="48" width="172" height="88" rx="14" fill="#5c8a4a"/>
-    <rect x="30" y="54" width="76" height="76" rx="9" fill="#f5ecd8"/>
-    <rect x="112" y="54" width="78" height="36" rx="9" fill="#fdf3dd"/>
-    <rect x="112" y="94" width="78" height="36" rx="9" fill="#fdf3dd"/>
-    <path d="M36 100 q16 -30 40 -26 q22 4 24 26 q-32 10 -64 0Z" fill="#fffaf0"/>
-    <path d="M36 100 q16 -30 40 -26" stroke="#eee0c4" stroke-width="2" fill="none"/>
-    <rect x="120" y="62" width="62" height="20" rx="9" fill="#c05a2e"/>
-    ${meatLump(136, 72, '#8a4a26', '#a86338', 7)}${pepperBit(160, 70)}
-    <rect x="120" y="102" width="62" height="20" rx="9" fill="#6fae52"/>
-    <rect x="126" y="108" width="20" height="8" rx="4" fill="#8fd47a"/>
-    <rect x="152" y="108" width="22" height="8" rx="4" fill="#e8c46b"/>
-    <path d="M78 62 q8 16 0 30 M92 60 q8 18 0 34" stroke="#f0e6cc" stroke-width="2" fill="none" opacity=".7"/>`);
-}
-
-/* 莜面窝窝 */
-function youmian() {
-  let cells = '';
-  const cx0 = 110, cy0 = 82;
-  for (let i = 0; i < 7; i++) {
-    const a = i * 51.4 * Math.PI / 180, r = 34;
-    cells += `<g transform="rotate(${i * 51.4} ${cx0} ${cy0})">
-      <rect x="${cx0 - 8}" y="${cy0 - r - 20}" width="16" height="26" rx="8" fill="#d9b98c"/>
-      <ellipse cx="${cx0}" cy="${cy0 - r - 20}" rx="8" ry="4" fill="#b99769"/>
-    </g>`;
-  }
-  return wrap(shadow() + steam() + `
-    <ellipse cx="110" cy="106" rx="80" ry="22" fill="#8c6a3e"/>
-    <ellipse cx="110" cy="102" rx="80" ry="22" fill="#a8834e"/>
-    <ellipse cx="110" cy="102" rx="66" ry="16" fill="#96703e"/>
-    ${cells}
-    <circle cx="110" cy="82" r="26" fill="none" stroke="#d9b98c" stroke-width="14"/>
-    <circle cx="110" cy="82" r="26" fill="none" stroke="#b99769" stroke-width="3"/>
-    <path d="M46 118 q10 6 20 0 M158 118 q10 6 20 0" stroke="#7c5a30" stroke-width="3" fill="none"/>`);
-}
-
-/* 铁锅炖 */
-function ironPot() {
-  return wrap(shadow(110, 120, 88) + steam() + `
-    <ellipse cx="110" cy="128" rx="60" ry="10" fill="#e0762e" opacity=".7"/>
-    <path d="M110 124 q-8 12 0 22 q8 -10 0 -22Z" fill="#ff9d3e"/>
-    <path d="M36 76 Q36 118 110 122 Q184 118 184 76 Q150 90 110 90 Q70 90 36 76Z" fill="#26282e"/>
-    <path d="M36 76 Q70 90 110 90 Q150 90 184 76 L180 64 Q110 78 40 64 Z" fill="#34363e"/>
-    <ellipse cx="110" cy="64" rx="70" ry="14" fill="#45474f"/>
-    <ellipse cx="110" cy="64" rx="60" ry="11" fill="#b0703a"/>
-    ${meatLump(86, 60, '#8a4a26', '#a86338', 8)}${meatLump(130, 66, '#7a3e1e', '#96522a', 7)}
-    <rect x="100" y="56" width="20" height="8" rx="4" fill="#f6c453" transform="rotate(-10 110 60)"/>
-    ${pepperBit(72, 68)}${pepperBit(146, 60, '#d84a3a')}
-    <path d="M96 70 q10 6 24 2" stroke="#e8a04a" stroke-width="3" fill="none" opacity=".6"/>
-    <path d="M28 82 q-8 8 0 16 M192 82 q8 8 0 16" stroke="#34363e" stroke-width="6" fill="none" stroke-linecap="round"/>`);
-}
-
-/* 港式烧腊饭 */
-function charsiuRice() {
-  let strips = '';
-  [[76,-8],[98,-2],[122,4],[92,10],[116,14]].forEach(([x, r], i) => {
-    strips += `<g transform="rotate(${r} ${x} 64)"><rect x="${x-4}" y="46" width="9" height="36" rx="4.5" fill="${i%2 ? '#c0392b' : '#d75a45'}"/><rect x="${x-4}" y="50" width="9" height="6" rx="3" fill="#e8836b"/></g>`;
-  });
-  return wrap(shadow() + `
-    <path d="M30 88 Q30 140 110 140 Q190 140 190 88 Z" fill="#3f6e8a"/>
-    <path d="M46 100 Q54 128 110 130 Q166 128 174 100 Q140 112 110 112 Q80 112 46 100Z" fill="rgba(0,0,0,.1)"/>
-    <ellipse cx="110" cy="88" rx="80" ry="16" fill="#4d80a0"/>
-    <path d="M48 88 Q72 56 110 56 Q148 56 172 88 Q110 98 48 88Z" fill="#fff6e8"/>
-    ${strips}
-    <path d="M52 84 Q110 72 168 84 Q110 94 52 84Z" fill="rgba(120,40,20,.28)"/>
-    ${greensDrop(78, 78)}${greensDrop(142, 80)}
-    <rect x="152" y="96" width="26" height="14" rx="7" fill="#fdf3dd"/><path d="M158 103 h14" stroke="#e8c46b" stroke-width="4" stroke-linecap="round"/>`);
-}
-
-/* 麻辣烫 / 冒菜碗 */
-function malatang() {
-  return wrap(shadow() + steam() + `
-    <path d="M30 80 Q30 138 110 138 Q190 138 190 80 Z" fill="#e2543a"/>
-    <path d="M46 94 Q54 124 110 126 Q166 124 174 94 Q140 104 110 104 Q80 104 46 94Z" fill="rgba(0,0,0,.1)"/>
-    <ellipse cx="110" cy="80" rx="80" ry="16" fill="#f47a5c"/>
-    <ellipse cx="110" cy="80" rx="69" ry="13" fill="#d44a25"/>
-    <rect x="88" y="34" width="4.4" height="60" rx="2.2" fill="#d9b98c" transform="rotate(-16 90 64)"/>
-    <rect x="124" y="30" width="4.4" height="64" rx="2.2" fill="#d9b98c" transform="rotate(12 126 62)"/>
-    <rect x="78" y="40" width="22" height="13" rx="6" fill="#b5651d"/>
-    <rect x="118" y="36" width="22" height="13" rx="6" fill="#c06a2a"/>
-    ${tofuPuff(100, 76)}${greensDrop(128, 78)}${meatLump(84, 74, '#8db860', '#a8d17a', 7)}
-    ${fishSlice(140, 84, -8)}${wontonPouch(74, 82)}${chiliOil(112, 72)}${scallion(96, 84)}`);
-}
-
-/* 米线 / 螺蛳粉 顶部配料已在调用处定制 */
-
-/* ==================== 40 道菜数据 ==================== */
-const FOODS = [
-  { n: '兰州牛肉面', e: '🍜', b: ['东方宫', '马兰拉面', '陈记牛肉面'],
-    img: () => soupBowl({ broth: '#e8c9a0', noodle: '#f2d98b',
-      tops: beefSlice(86, 70, -10) + beefSlice(128, 72, 8) + greensDrop(108, 66) + scallion(118, 78) + scallion(96, 78) + chiliOil(150, 74) }) },
-  { n: '重庆小面', e: '🍜', b: ['遇见小面', '街边老面馆'],
-    img: () => soupBowl({ broth: '#d44a25',
-      tops: meatLump(90, 70, '#a05a2c', '#c07b45', 8) + greensDrop(124, 68) + pepperBit(104, 76, '#d84a3a') + pepperBit(140, 76) + scallion(112, 72) + chiliOil(76, 76) }) },
-  { n: '山西刀削面', e: '🍜', b: ['顺溜刀削面', '晋面轩'],
-    img: () => soupBowl({ broth: '#c98a4a', noodle: '#f5e3b0', noodleW: 5,
-      tops: `<path d="M66 70 l22 4 M92 64 l22 6 M118 70 l22 2 M74 78 l20 3 M126 78 l20 -2" stroke="#f5e3b0" stroke-width="5" stroke-linecap="round"/>` + beefSlice(104, 70, -6) + greensDrop(84, 74) + scallion(140, 74) }) },
-  { n: '武汉热干面', e: '🍜', b: ['蔡林记', '街边早点摊'],
-    img: () => dryNoodles() },
-  { n: '日式拉面', e: '🍜', b: ['味千拉面', '一风堂'],
-    img: () => soupBowl({ broth: '#e8c9a0', bowl: '#8a3038', bowl2: '#a83e46', noodle: '#f2d98b',
-      tops: `<rect x="128" y="52" width="18" height="20" rx="2" fill="#2b3a2a"/>` + beefSlice(84, 68, -8) + eggHalf(114, 72) + greensDrop(70, 74) + scallion(100, 60) }) },
-  { n: '柳州螺蛳粉', e: '🍜', b: ['好欢螺', '螺霸王', '柳州人家'],
-    img: () => soupBowl({ broth: '#d44a25', noodle: '#f5f0e0',
-      tops: tofuPuff(78, 70) + tofuPuff(138, 74) + `<circle cx="94" cy="62" r="3" fill="#8a5a2a"/><circle cx="122" cy="58" r="3" fill="#8a5a2a"/><circle cx="110" cy="66" r="3" fill="#8a5a2a"/>` + greensDrop(108, 76) + chiliOil(126, 66) }) },
-  { n: '过桥米线', e: '🍜', b: ['蒙自源', '阿香米线'],
-    img: () => soupBowl({ broth: '#e8d5b5', noodle: '#fdfaf0',
-      tops: `<rect x="70" y="60" width="22" height="12" rx="4" fill="#e8b04b"/>` + meatLump(126, 68, '#c05a2e', '#d97a4e', 7) + greensDrop(100, 62) + scallion(112, 74) + `<circle cx="142" cy="70" r="4.4" fill="#e8e0d0"/>` }) },
-  { n: '五谷渔粉', e: '🐟', b: ['五谷渔粉', '渔粉小镇'],
-    img: () => soupBowl({ broth: '#e8c980', noodle: '#f5f0e0',
-      tops: fishSlice(84, 68, -6) + fishSlice(126, 72, 6) + fishSlice(106, 60) + greensDrop(146, 74) + scallion(96, 78) }) },
-  { n: '鸭血粉丝汤', e: '🍲', b: ['回味', '南京大牌档'],
-    img: () => soupBowl({ broth: '#d4a060', noodle: '#f5f0e0', noodleW: 2.4,
-      tops: `<rect x="80" y="66" width="14" height="12" rx="3" fill="#6e2a2a"/><rect x="124" y="68" width="14" height="12" rx="3" fill="#6e2a2a"/><rect x="100" y="72" width="13" height="11" rx="3" fill="#5c2222"/>` + greensDrop(112, 62) + scallion(140, 70) }) },
-  { n: '鲜肉馄饨', e: '🥟', b: ['吉祥馄饨', '千里香馄饨王'],
-    img: () => soupBowl({ broth: '#e8dcc0', noodle: '#f5f0e0', noodleW: 2,
-      tops: wontonPouch(82, 68) + wontonPouch(120, 64) + wontonPouch(146, 74) + scallion(100, 76) + greensDrop(64, 74) }) },
-  { n: '麻辣烫', e: '🍲', b: ['杨国福', '张亮麻辣烫'],
-    img: () => malatang() },
-  { n: '皮蛋瘦肉粥', e: '🥣', b: ['嘉和一品', '宏状元'],
-    img: () => porridge() },
-  { n: '黄焖鸡米饭', e: '🍛', b: ['杨铭宇', '食必思'],
-    img: () => riceBowl({ tops: meatLump(90, 66, '#b0622c', '#d0804a', 12) + meatLump(122, 62, '#9a5222', '#b87038', 11) + meatLump(106, 76, '#b0622c', '#d0804a', 10) + pepperBit(78, 76) + pepperBit(138, 74) + greensDrop(110, 54) + `<path d="M60 70 Q110 60 160 70" stroke="#8a4a1e" stroke-width="3.4" fill="none" opacity=".5"/>` }) },
-  { n: '麻辣香锅', e: '🥘', b: ['拿渡', '香锅人家'],
-    img: () => pilePlate({ tops: meatLump(84, 78, '#a05a2c', '#c07b45', 10) + meatLump(128, 76, '#8a4a26', '#a86338', 9) + pepperBit(96, 68) + pepperBit(140, 84, '#d84a3a') + pepperBit(70, 88, '#d84a3a') + tofuPuff(112, 70) + greensDrop(104, 84) + `<circle cx="88" cy="90" r="2" fill="#e53935"/><circle cx="132" cy="64" r="2" fill="#e53935"/>` + shrimp(74, 70) }) },
-  { n: '米饭快餐', e: '🍱', b: ['老乡鸡', '乡村基', '真功夫'],
-    img: () => mealTray() },
-  { n: '牛肉饭', e: '🍛', b: ['吉野家', '食其家'],
-    img: () => riceBowl({ bowl: '#7a2e2e', bowl2: '#943a3a',
-      tops: meatLump(88, 64, '#8a4a26', '#a86338', 11) + meatLump(120, 60, '#7a3e1e', '#96522a', 10) + meatLump(104, 74, '#8a4a26', '#a86338', 9) + `<path d="M62 66 Q110 56 158 66" stroke="#5c2a0e" stroke-width="4" fill="none" opacity=".4"/>` + scallion(112, 56) + scallion(90, 74) }) },
-  { n: '石锅拌饭', e: '🍲', b: ['米村拌饭', '汉拿山'],
-    img: () => stoneBowl() },
-  { n: '潮汕牛肉火锅', e: '🍲', b: ['八合里', '陈记顺和'],
-    img: () => hotPot(false) },
-  { n: '川渝火锅', e: '🍲', b: ['海底捞', '呷哺呷哺'],
-    img: () => hotPot(true) },
-  { n: '老北京涮羊肉', e: '🍲', b: ['东来顺', '聚宝源'],
-    img: () => copperPot() },
-  { n: '东北铁锅炖', e: '炖', b: ['山河屯铁锅炖', '关东铁锅炖'],
-    img: () => ironPot() },
-  { n: '烤鱼', e: '🐟', b: ['半天妖', '探鱼'],
-    img: () => roastFish() },
-  { n: '炭火烤肉', e: '🥩', b: ['九田家', '汉拿山'],
-    img: () => grillMeat() },
-  { n: '烧烤串串', e: '🍢', b: ['很久以前', '木屋烧烤'],
-    img: () => skewers() },
-  { n: '北京烤鸭', e: '🦆', b: ['全聚德', '四季民福', '大董'],
-    img: () => roastDuck() },
-  { n: '湘菜小炒', e: '🌶️', b: ['费大厨', '兰湘子'],
-    img: () => pilePlate({ tops: meatLump(92, 76, '#c98a5a', '#e0a878', 9) + meatLump(126, 72, '#b87a4a', '#d49a68', 8) + pepperBit(80, 66) + pepperBit(108, 62) + pepperBit(140, 82, '#d84a3a') + pepperBit(70, 84, '#d84a3a') + `<circle cx="100" cy="88" r="2.2" fill="#e53935"/><circle cx="118" cy="84" r="2.2" fill="#e53935"/><circle cx="134" cy="94" r="2.2" fill="#43a047"/>` }) },
-  { n: '西北莜面', e: '🍜', b: ['西贝莜面村'],
-    img: () => youmian() },
-  { n: '港式烧腊饭', e: '🍚', b: ['太兴', '翠华'],
-    img: () => charsiuRice() },
-  { n: '虾仁水饺', e: '🥟', b: ['喜家德', '袁记云饺'],
-    img: () => dumplings('jiaozi') },
-  { n: '鲜肉包子', e: '🥠', b: ['庆丰包子铺', '巴比馒头'],
-    img: () => dumplings('baozi') },
-  { n: '蟹黄小笼包', e: '🥟', b: ['鼎泰丰', '南翔小笼'],
-    img: () => dumplings('xiaolongbao') },
-  { n: '生煎包', e: '🥟', b: ['小杨生煎', '丰裕生煎'],
-    img: () => dumplings('shengjian') },
-  { n: '煎饼果子', e: '🌯', b: ['早点摊现做', '南楼煎饼'],
-    img: () => jianbing() },
-  { n: '腊汁肉夹馍', e: '🥙', b: ['樊记', '魏家凉皮'],
-    img: () => roujiamo() },
-  { n: '汉堡', e: '🍔', b: ['麦当劳', '肯德基', '塔斯汀'],
-    img: () => burger() },
-  { n: '披萨', e: '🍕', b: ['必胜客', '达美乐', '萨莉亚'],
-    img: () => pizza() },
-  { n: '炸鸡', e: '🍗', b: ['华莱士', '德克士', '肯德基'],
-    img: () => friedChicken() },
-  { n: '寿司', e: '🍣', b: ['争鲜', 'N多寿司'],
-    img: () => sushi() },
-  { n: '沙县小吃', e: '🥟', b: ['沙县小吃', '淳百味'],
-    img: () => mealTray() },
-  { n: '冒菜', e: '🥘', b: ['芙蓉树下', '火锅冒菜店'],
-    img: () => malatang() },
-];
-
-/* 麻辣香锅里的虾(补充形状) */
-function shrimp(x, y) {
-  return `<path d="M${x - 10} ${y + 4} q4 -14 18 -10 q10 3 6 12 q-2 5 -8 4 q4 -8 -4 -10 q-8 -2 -8 8Z" fill="#e8836b"/><path d="M${x - 10} ${y + 4} l-4 6 l7 -2Z" fill="#e8836b"/>`;
-}
-
-/* ==================== 转盘绘制 ==================== */
-const N = FOODS.length;
-const SEG = 360 / N;
-const canvas = document.getElementById('wheel');
-let rot = 0, spinning = false, soundOn = true;
-
-function drawWheel() {
-  const dpr = window.devicePixelRatio || 1;
-  const size = canvas.clientWidth;
-  canvas.width = size * dpr;
-  canvas.height = size * dpr;
-  const ctx = canvas.getContext('2d');
-  ctx.scale(dpr, dpr);
-  const cx = size / 2, cy = size / 2, R = size / 2 - 4;
-
-  // 外圈金环
-  ctx.beginPath();
-  ctx.arc(cx, cy, R, 0, Math.PI * 2);
-  const rim = ctx.createLinearGradient(0, 0, size, size);
-  rim.addColorStop(0, '#ffe9a8'); rim.addColorStop(.5, '#e0a127'); rim.addColorStop(1, '#f6c453');
-  ctx.fillStyle = rim;
-  ctx.fill();
-
-  // 扇区
-  const inner = R * 0.93;
-  for (let i = 0; i < N; i++) {
-    const a0 = (i * SEG - 90) * Math.PI / 180;
-    const a1 = ((i + 1) * SEG - 90) * Math.PI / 180;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, inner, a0, a1);
-    ctx.closePath();
-    ctx.fillStyle = i % 2 ? '#fdeecb' : '#c93540';
-    ctx.fill();
-  }
-  // 文字
-  ctx.save();
-  ctx.textAlign = 'right';
-  ctx.textBaseline = 'middle';
-  ctx.font = `700 ${Math.max(11, size * 0.036)}px "PingFang SC","Microsoft YaHei",sans-serif`;
-  for (let i = 0; i < N; i++) {
-    const mid = (i * SEG + SEG / 2 - 90) * Math.PI / 180;
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(mid);
-    ctx.fillStyle = i % 2 ? '#8c1f28' : '#fff6e0';
-    ctx.fillText(FOODS[i].n, inner - 10, 0);
-    ctx.restore();
-  }
-  ctx.restore();
-
-  // 金环灯珠
-  const bulbR = (R + inner) / 2;
-  for (let i = 0; i < 24; i++) {
-    const a = (i * 15 - 90) * Math.PI / 180;
-    ctx.beginPath();
-    ctx.arc(cx + Math.cos(a) * bulbR, cy + Math.sin(a) * bulbR, size * 0.008, 0, Math.PI * 2);
-    ctx.fillStyle = i % 2 ? '#fff3cf' : '#d98a1d';
-    ctx.fill();
-  }
-  // 中心底衬
-  ctx.beginPath();
-  ctx.arc(cx, cy, size * 0.185, 0, Math.PI * 2);
-  ctx.fillStyle = '#7c1622';
-  ctx.fill();
-  ctx.lineWidth = size * 0.008;
-  ctx.strokeStyle = '#f6c453';
-  ctx.stroke();
-}
-drawWheel();
-window.addEventListener('resize', drawWheel);
-
-/* ==================== 声音 ==================== */
-let audioCtx = null;
-function ac() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-  return audioCtx;
-}
-function tick() {
-  if (!soundOn) return;
-  try {
-    const ctx = ac(), o = ctx.createOscillator(), g = ctx.createGain();
-    o.type = 'square'; o.frequency.value = 1750;
-    g.gain.setValueAtTime(.08, ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(.0001, ctx.currentTime + .045);
-    o.connect(g).connect(ctx.destination);
-    o.start(); o.stop(ctx.currentTime + .05);
-  } catch (e) {}
-}
-function fanfare() {
-  if (!soundOn) return;
-  try {
-    const ctx = ac();
-    [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
-      const o = ctx.createOscillator(), g = ctx.createGain();
-      o.type = 'triangle'; o.frequency.value = f;
-      const t0 = ctx.currentTime + i * 0.11;
-      g.gain.setValueAtTime(.0001, t0);
-      g.gain.exponentialRampToValueAtTime(.14, t0 + .02);
-      g.gain.exponentialRampToValueAtTime(.0001, t0 + .3);
-      o.connect(g).connect(ctx.destination);
-      o.start(t0); o.stop(t0 + .32);
-    });
-  } catch (e) {}
-}
-document.getElementById('soundBtn').addEventListener('click', function () {
-  soundOn = !soundOn;
-  this.textContent = soundOn ? '🔔' : '🔕';
-});
-
-/* ==================== 转动逻辑 ==================== */
-function pointerIndex(r) {
-  const a = ((-(r % 360)) % 360 + 360) % 360;
-  return Math.floor(a / SEG) % N;
-}
-const easeOutQuart = t => 1 - Math.pow(1 - t, 4);
-
-function spin() {
-  if (spinning) return;
-  spinning = true;
-  document.getElementById('goBtn').style.pointerEvents = 'none';
-  const winner = Math.floor(Math.random() * N);
-  const jitter = (Math.random() * 0.7 - 0.35) * SEG;
-  const targetCenter = winner * SEG + SEG / 2;
-  const cur = ((rot % 360) + 360) % 360;
-  let delta = ((-(targetCenter + jitter)) - cur) % 360;
-  if (delta < 0) delta += 360;
-  const finalRot = rot + 360 * (5 + Math.floor(Math.random() * 3)) + delta;
-  const duration = 4400 + Math.random() * 1400;
-  const startRot = rot, startT = performance.now();
-  let lastIdx = pointerIndex(rot);
-
-  function frame(now) {
-    const t = Math.min(1, (now - startT) / duration);
-    rot = startRot + (finalRot - startRot) * easeOutQuart(t);
-    canvas.style.transform = `rotate(${rot}deg)`;
-    const idx = pointerIndex(rot);
-    if (idx !== lastIdx) { lastIdx = idx; tick(); }
-    if (t < 1) {
-      requestAnimationFrame(frame);
-    } else {
-      spinning = false;
-      document.getElementById('goBtn').style.pointerEvents = '';
-      showResult(pointerIndex(finalRot));
-    }
-  }
-  requestAnimationFrame(frame);
-}
-document.getElementById('goBtn').addEventListener('click', spin);
-canvas.addEventListener('click', spin);
-window.addEventListener('keydown', e => {
-  if (e.code === 'Space') { e.preventDefault(); spin(); }
-});
-
-/* ==================== 结果弹窗 ==================== */
-const mask = document.getElementById('modalMask');
-function showResult(i) {
-  const f = FOODS[i];
-  document.getElementById('modalArt').innerHTML = f.img();
-  document.getElementById('modalDish').textContent = f.n;
-  const row = document.getElementById('brandRow');
-  row.innerHTML = '';
-  const pick = Math.floor(Math.random() * f.b.length);
-  f.b.forEach((b, bi) => {
-    const chip = document.createElement('span');
-    chip.className = 'brand-chip' + (bi === pick ? ' pick' : '');
-    chip.textContent = b;
-    row.appendChild(chip);
-  });
-  mask.classList.add('show');
-  fanfare();
-  confettiBurst();
-  pushHistory(f);
-}
-function closeResult(again) {
-  mask.classList.remove('show');
-  if (again) setTimeout(spin, 260);
-}
-document.getElementById('btnOk').addEventListener('click', () => closeResult(false));
-document.getElementById('btnAgain').addEventListener('click', () => closeResult(true));
-mask.addEventListener('click', e => { if (e.target === mask) closeResult(false); });
-
-/* ==================== 历史 ==================== */
-const HKEY = 'foodwheel-history';
-function loadHistory() {
-  try { return JSON.parse(localStorage.getItem(HKEY)) || []; } catch (e) { return []; }
-}
-function pushHistory(f) {
-  let h = loadHistory();
-  h = h.filter(x => x.n !== f.n);
-  h.unshift({ n: f.n, e: f.e });
-  h = h.slice(0, 12);
-  localStorage.setItem(HKEY, JSON.stringify(h));
-  renderHistory();
-}
-function renderHistory() {
-  const h = loadHistory();
-  const box = document.getElementById('histChips');
-  const empty = document.getElementById('histEmpty');
-  box.innerHTML = '';
-  h.forEach(x => {
-    const c = document.createElement('span');
-    c.className = 'chip';
-    c.textContent = x.e + ' ' + x.n;
-    box.appendChild(c);
-  });
-  empty.style.display = h.length ? 'none' : 'block';
-}
-renderHistory();
-
-/* ==================== 彩带 ==================== */
-const cf = document.getElementById('confetti');
-const cfx = cf.getContext('2d');
-let parts = [], cfRunning = false;
-function sizeConfetti() {
-  cf.width = innerWidth; cf.height = innerHeight;
-}
-sizeConfetti();
-window.addEventListener('resize', sizeConfetti);
-function confettiBurst() {
-  const colors = ['#ffd54a', '#e4372e', '#fff3cf', '#f0a92d', '#ff8a65', '#8fd47a'];
-  for (let i = 0; i < 130; i++) {
-    parts.push({
-      x: innerWidth / 2 + (Math.random() - .5) * 160,
-      y: innerHeight * .38,
-      vx: (Math.random() - .5) * 13,
-      vy: -6 - Math.random() * 9,
-      s: 5 + Math.random() * 6,
-      c: colors[Math.floor(Math.random() * colors.length)],
-      r: Math.random() * Math.PI, vr: (Math.random() - .5) * .3,
-      life: 1
-    });
-  }
-  if (!cfRunning) { cfRunning = true; requestAnimationFrame(cfFrame); }
-}
-function cfFrame() {
-  cfx.clearRect(0, 0, cf.width, cf.height);
-  parts.forEach(p => {
-    p.vy += .32; p.x += p.vx; p.y += p.vy; p.vx *= .99; p.r += p.vr; p.life -= .008;
-    cfx.save();
-    cfx.translate(p.x, p.y);
-    cfx.rotate(p.r);
-    cfx.globalAlpha = Math.max(0, p.life);
-    cfx.fillStyle = p.c;
-    cfx.fillRect(-p.s / 2, -p.s / 2, p.s, p.s * .62);
-    cfx.restore();
-  });
-  parts = parts.filter(p => p.life > 0 && p.y < cf.height + 30);
-  if (parts.length) { requestAnimationFrame(cfFrame); }
-  else { cfRunning = false; cfx.clearRect(0, 0, cf.width, cf.height); }
-}
-</script>
 </body>
 </html>
